@@ -17,9 +17,8 @@ whoever wrote the change.
 It is not a project scaffolder or a repository template. It creates no project, no application
 code and no project infrastructure, and it needs no version control.
 
-> **Status.** The ruleset and the installer are built, and the installer is tested under Bash 5 with
-> GNU tools and under Bash 3.2 with BusyBox. No release is published yet: until the first one,
-> `<org>` below is a placeholder, and a checkout installs with `--from`.
+> **Status.** v0.1.0 is the first release. The installer is tested under Bash 5 with GNU tools and
+> under Bash 3.2 with BusyBox.
 
 ## Install
 
@@ -28,7 +27,7 @@ code and no project infrastructure, and it needs no version control.
 From the project directory, new or existing:
 
 ```bash
-curl -fsSL https://github.com/shakilnwz/specforge/releases/latest/download/install.sh | bash -s -- install
+curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash -s -- install
 ```
 
 From a checkout of this repository, with no download:
@@ -72,7 +71,7 @@ and changes nothing. Every command, option and answer key is listed under
 piping it to a shell is the better habit:
 
 ```bash
-curl -fsSLo install.sh https://github.com/shakilnwz/specforge/releases/latest/download/install.sh
+curl -fsSLo install.sh https://shakilnwz.github.io/specforge/install.sh
 less install.sh && bash install.sh install --dry-run
 ```
 
@@ -116,7 +115,7 @@ Both end with a phase-gate report.
 From the project directory, with the installer of the version you want:
 
 ```bash
-curl -fsSL https://github.com/shakilnwz/specforge/releases/latest/download/install.sh | bash -s -- update
+curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash -s -- update
 #   … -- update --reconfigure     answer the questions again: add a stack, drop an agent
 #   … -- remove                   take back what was installed and is still unmodified
 
@@ -322,6 +321,7 @@ Each concern has exactly one owning audit, so a finding is filed once and linked
 
 ```
 README.md                         This manual — stays with the kit
+.github/workflows/pages.yml       Publishes the latest release's install.sh to GitHub Pages
 AGENTS.md, CLAUDE.md              Instructions for agents maintaining the kit — stay with the kit
 install.sh                        The installer: install, update, remove
 manifest                          Which template files each answer keeps, and how each is managed
@@ -392,11 +392,23 @@ The same commands and options work either way:
 
 ```bash
 # from a release, in the project directory
-curl -fsSL https://github.com/shakilnwz/specforge/releases/latest/download/install.sh | bash -s -- <command> [options]
+curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash -s -- <command> [options]
 
 # from a checkout of this repository, with no download
 ./install.sh <command> --dir <project> --from . [options]
 ```
+
+Each release's `install.sh` installs that release. The address above serves the latest one, and
+two GitHub addresses serve the same files:
+
+| Address | Serves |
+| --- | --- |
+| `https://shakilnwz.github.io/specforge/install.sh` | The latest release's installer, copied to GitHub Pages when a release is published; for up to ten minutes after, possibly still the previous one |
+| `https://github.com/shakilnwz/specforge/releases/latest/download/install.sh` | The latest release's installer, straight from GitHub Releases |
+| `https://github.com/shakilnwz/specforge/releases/download/vX.Y.Z/install.sh` | One release's installer, to pin a version |
+
+Wherever the installer comes from, it downloads its release's tarball from GitHub Releases and
+verifies the published SHA-256 before unpacking it.
 
 | Command | Does |
 | --- | --- |
@@ -502,8 +514,10 @@ A new template file needs no line unless only some answers keep it.
 ```
 
 It checks the kit first. Then it builds the three release assets (the stamped `install.sh`, the
-tarball, and its checksum) and prints the `gh release create` command. It publishes nothing. The
-checks:
+tarball, and its checksum) and prints the `gh release create` command. It publishes nothing.
+Publishing the release runs `.github/workflows/pages.yml`, which copies the latest release's
+`install.sh` to GitHub Pages; the Pages environment accepts deployments from `master` and from
+`v*` tags. The checks:
 
 - every script parses;
 - every manifest line names a known selector, a known mode and an existing path;

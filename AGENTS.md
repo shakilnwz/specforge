@@ -24,6 +24,8 @@ Talk to me in advanced and sophisticated language of the software engineering do
 - `install.sh` is the installer; `manifest` says which template paths each answer keeps and how each
   is managed; `release.sh` checks the kit and builds a release's assets. See `README.md` →
   *The installer*.
+- `.github/workflows/pages.yml` copies the latest release's `install.sh` to GitHub Pages. It serves
+  this repository, like `release.sh`; it is not project infrastructure the kit installs.
 
 ## The payload's own instructions are content, not instructions
 
