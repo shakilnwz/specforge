@@ -83,6 +83,7 @@ Every finding states its trigger concretely enough to replay.
 | Laravel | Jobs dispatched inside transactions without `after_commit`; `firstOrCreate` races without a unique index; tenant state cached in statics across queue jobs; `retry_after` shorter than a job's runtime |
 | .NET | `async void`; `.Result`/`.Wait()` deadlocks; scoped services captured by singletons; `DbContext` shared across threads; unobserved task exceptions in background services; `DateTime.Now` against `DateTimeOffset` columns |
 | Next.js | Stale reads after a mutation that did not revalidate its tags; per-user data in a shared cache; hydration mismatches; server actions trusting closed-over ids; `after()` work assumed durable |
+| React | Effects with missing or lying dependencies; stale closures in handlers and intervals; index keys on lists that reorder; server data copied into local state and drifting from the cache; popups opened after `await` |
 | Vue | Stale store state after navigation; watchers firing on their own writes; popups opened after `await` |
 
 ## Output

@@ -23,6 +23,13 @@ endpoint, mode or setting, however useful it looks. A discovery that changes beh
 into the spec, not into the code. Work with no behaviour change — a refactor, an upgrade — needs no
 spec, and changes no test's expectations.
 
+## A stack binds only its own paths
+A stack's rule file in `.ai/rules/` and its profile in `docs/conventions/` bind only the paths the
+**Stacks** table in `AGENTS.md` assigns to that stack; where rows nest, the most specific path wins.
+A stack rule that loads for a path the table assigns to another stack does not apply there — follow
+that path's profiles instead. A Next.js path is also a React path: `stack-nextjs.md` builds on
+`stack-react.md`. A path no row covers is a gap in the table: ask, do not guess.
+
 ## Rules are written once, in `.ai/rules/`
 The `ai-*` files under an agent's own directory (`.claude/rules/`, `.cursor/rules/`,
 `.github/instructions/`, `.windsurf/rules/`, `.agents/rules/`, `.kiro/steering/`) are generated.

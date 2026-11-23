@@ -21,8 +21,8 @@ from, and what the code cannot settle is asked.
 
 ## Before you start
 
-1. Confirm the rules are present: `AGENTS.md` (or the project's own, with the rules' sections in
-   it), `CLAUDE.md`, `.ai/rules/`, `.ai/prompts/`, `.ai/agents`, `.ai/bin/`, `docs/conventions/`,
+1. Confirm the rules are present: `AGENTS.md` (the project's own keeps the rules' block between
+   `<!-- specforge:begin -->` and `<!-- specforge:end -->`), `CLAUDE.md`, `.ai/rules/`, `.ai/prompts/`, `.ai/agents`, `.ai/bin/`, `docs/conventions/`,
    `docs/templates/`, `docs/audit/readiness.md`.
 2. List every file the installation kept from the project instead of the rules' version — a
    `*.specforge-incoming` file beside it, or the list the manual copy printed. Each is reconciled
@@ -36,8 +36,9 @@ from, and what the code cannot settle is asked.
 Derive everything the code already answers, each finding with the paths that show it:
 
 1. **Apps and stacks:** manifests and lockfiles — `composer.json` with `artisan`; `*.sln`, `*.slnx`,
-   `*.csproj`; `next.config.*`, and `next` or `vue` among `package.json` dependencies — with runtime
-   and framework versions.
+   `*.csproj`; `next.config.*`, and `next`, `react` or `vue` among `package.json` dependencies — with
+   runtime and framework versions, and the path each one lives in: a frontend inside a server app
+   (`resources/js`, `ClientApp`) is a path of its own.
 2. **Shape:** single app or monorepo (workspace files, `apps/`, solution projects); each app's
    surfaces (route groups and their guards, hosts and prefixes; `MapGroup` policies; App Router route
    groups); modules, and the edges between them — enough to propose a modularity level, not to audit
@@ -83,14 +84,17 @@ One round, each question carrying the survey's finding as the proposed answer:
    is not made here; it becomes a naming-audit finding.
 4. Fill `AGENTS.md` — **Stacks**, **Architecture Overview**, **Common Commands**, **Local
    Endpoints**, **Database** — from what the project already runs and documents, never invented. If
-   the project kept its own `AGENTS.md`, place the rules' sections in it between
-   `<!-- specforge:begin -->` and `<!-- specforge:end -->`, leaving the project's own text
-   untouched and resolving contradictions as the owner answered. Reconcile every other kept file the
-   same way, then delete its `*.specforge-incoming` copy.
-5. Trim the rules to the stacks in use, and adjust the `paths:` globs in `.ai/rules/*.md` to the
-   project's real layout, in the form Laravel Boost writes back.
-6. Uncomment the agents in `.ai/agents` and run `.ai/bin/sync-rules`. The project's own rule files
-   are never touched; a `conflict:` line names a file to rename.
+   the project kept its own `AGENTS.md`, the installer appended the rules' block to it and wrote the
+   kit's complete file beside it as `AGENTS.md.specforge-incoming`: bring the project sections over
+   from it (**Phase**, **Stacks**, **App conventions** and the sections after them), leaving the
+   block and the project's own text untouched and resolving contradictions as the owner answered.
+   Reconcile every other kept file the same way, then delete its `*.specforge-incoming` copy.
+5. Trim the rules to the stacks in use. Fill the **Stacks** table with one row per path that has its
+   own profiles; the stack rule files keep their globs, since the table scopes them. Adjust a core
+   rule file's `paths:` only where the layout needs it, in the form Laravel Boost writes back.
+6. Confirm `.ai/agents` lists the agents in use — the installer fills it from its answers — and run
+   `.ai/bin/sync-rules` after any change. The project's own rule files are never touched; a
+   `conflict:` line names a file to rename.
 7. **Baseline audits**, each run from its prompt under
    [`auditing.md`](../../docs/conventions/auditing.md) and filed as it says: architecture
    conformance, modularity (when modular), security, test coverage, dependencies, and spec

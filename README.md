@@ -4,7 +4,7 @@ A ruleset for building software with AI coding agents, and the means to add it t
 with no code yet, or one long in production. It brings:
 
 - **Coding rules:** stack-neutral core conventions, realised per stack by profiles for **Laravel**,
-  **ASP.NET Core**, **Next.js** and **Vue**.
+  **ASP.NET Core**, **Next.js**, **React** and **Vue** — in any combination per project.
 - **Spec rules:** spec-driven development, where behaviour is specified, approved and traced to
   tests.
 - **Audit rules:** eighteen read-only audits under one protocol.
@@ -17,53 +17,66 @@ whoever wrote the change.
 It is not a project scaffolder or a repository template. It creates no project, no application
 code and no project infrastructure, and it needs no version control.
 
-> **Status.** The ruleset in [`template/`](template/) is complete, and installs by hand today. The
-> installer is planned, not built (see [Roadmap](#roadmap-the-installer)).
+> **Status.** The ruleset and the installer are built, and the installer is tested under Bash 5 with
+> GNU tools and under Bash 3.2 with BusyBox. No release is published yet: until the first one,
+> `<org>` below is a placeholder, and a checkout installs with `--from`.
 
 ## Install
 
-### 1. Add the rules to your project
+### 1. Run the installer
 
-Only `template/` is installed. This README and everything else at the root stay with the kit. The
-same commands serve a new project and an existing one, because nothing that is already there is
-overwritten:
+From the project directory, new or existing:
 
 ```bash
-KIT=~/path/to/specforge/template        # a local checkout of the kit
-PROJECT=~/code/my-app                   # the project, new or existing
-
-cd "$KIT" && find . -type f | while IFS= read -r f; do
-  if [ -e "$PROJECT/$f" ]; then
-    printf 'kept yours: %s\n' "$f"
-  else
-    mkdir -p "$PROJECT/$(dirname "$f")" && cp -p "$f" "$PROJECT/$f"
-  fi
-done
+curl -fsSL https://github.com/<org>/specforge/releases/latest/download/install.sh | bash -s -- install
 ```
 
-Without a checkout — one release tarball, no history — once the kit is published:
+From a checkout of this repository, with no download:
 
 ```bash
-tmp="$(mktemp -d)"
-curl -fsSL https://github.com/<org>/<repo>/archive/refs/tags/<tag>.tar.gz \
-  | tar -xz -C "$tmp" --strip-components=1
-KIT="$tmp/template"      # then run the loop above, and: rm -rf "$tmp"
+./install.sh install --dir ~/code/my-app --from .
 ```
 
-Every `kept yours:` line is a file your project already had. The agent reconciles each one during
-adoption; nothing is merged silently.
+It first detects what the project already is: its apps and their stacks, the coding agents
+configured, and the code host. Then it asks five questions, each defaulting to what it found:
 
-### 2. Choose your agents
+1. a new project, or an existing one;
+2. each app's path and its profiles, in any combination. A frontend inside a server app
+   (`resources/js`, `ClientApp`) is a path of its own;
+3. the coding agents in use;
+4. whether a Gherkin runner executes the acceptance scenarios;
+5. the code host.
 
-Uncomment the agents that work in the project in `.ai/agents`, then generate their rule files:
+It installs the rules those answers select, fills `.ai/agents` and the **Stacks** table, and
+generates every chosen agent's rule files. It records what it did in `.ai/specforge.lock`. A file
+the project already has is never overwritten: the kit's version goes beside it as
+`<file>.specforge-incoming`, for the agent to reconcile during adoption.
+
+Without questions, in CI or for a second project with the same architecture:
 
 ```bash
-.ai/bin/sync-rules
+cat > rules.answers <<'EOF'
+state=existing
+app=. laravel
+app=resources/js vue
+agents=claude cursor
+gherkin=no
+host=github
+EOF
+./install.sh install --dir ~/code/my-app --from . --answers rules.answers
 ```
 
-### 3. Hand over to an agent
+A project's `.ai/specforge.lock` is itself a valid answers file. `--dry-run` shows what would change
+and changes nothing. Reading a script before piping it to a shell is the better habit:
 
-Open the project in any of those agents and say one of these:
+```bash
+curl -fsSLo install.sh https://github.com/<org>/specforge/releases/latest/download/install.sh
+less install.sh && bash install.sh install --dry-run
+```
+
+### 2. Hand over to an agent
+
+Open the project in any of your agents and say one of these:
 
 | The project… | Say | The agent follows |
 | --- | --- | --- |
@@ -74,7 +87,7 @@ Open the project in any of those agents and say one of these:
 - the product, its capabilities and its vocabulary;
 - the stack of each app;
 - the shape of the system: apps, surfaces, modules and modularity level;
-- which agents you use, and your constraints.
+- your constraints.
 
 It then writes ADR-0001 and ADR-0002 as Proposed, the context page and the glossary seed, and fills
 `AGENTS.md`. It *reports* — never creates — the project infrastructure G0 expects.
@@ -88,12 +101,28 @@ It then writes ADR-0001 and ADR-0002 as Proposed, the context page and the gloss
 
 Both end with a phase-gate report.
 
-### 4. Take the owner's decisions, and switch on enforcement
+### 3. Take the owner's decisions, and switch on enforcement
 
 - Accept or amend the ADRs, and set `AGENTS.md`'s **Phase** line from the gate report.
 - Add `.ai/bin/check` to CI beside each app's lint, type check, tests and arch tests.
-- For a Laravel app with Laravel Boost, run `php artisan boost:install`. Boost keeps
-  `.ai/rules/index.md` in the format `sync-rules` writes, and owns `.ai/rules/boost/`.
+- For a Laravel app with Laravel Boost, run `php artisan boost:install`; the installer reminds you
+  when it finds Boost. Boost keeps `.ai/rules/index.md` in the format `sync-rules` writes, and owns
+  `.ai/rules/boost/`.
+
+### Keeping the rules current
+
+From the project directory, with the installer of the version you want:
+
+```bash
+curl -fsSL https://github.com/<org>/specforge/releases/latest/download/install.sh | bash -s -- update
+#   … -- update --reconfigure     answer the questions again: add a stack, drop an agent
+#   … -- remove                   take back what was installed and is still unmodified
+```
+
+`update` replaces only what is still as the kit installed it. A file you changed stays yours, and
+the kit's newer version is offered beside it only when the kit's version has changed too. A file you
+deleted is not restored. Agents can also be changed by editing `.ai/agents` and running
+`.ai/bin/sync-rules`.
 
 ## How the rules reach every agent
 
@@ -164,20 +193,20 @@ tell it what to read, what to write and when to stop.
 
 ## Choosing your configuration
 
-Each choice decides which rule files a project keeps and which ADR records it. Bootstrap and adopt
-apply this table by hand today; it is the contract the installer will implement.
+Each choice decides which rule files a project keeps and which ADR records it. The installer asks
+the questions that change files (project state, profiles per path, agents, acceptance scenarios,
+code host) and records the answers in `.ai/specforge.lock`. Bootstrap or adopt settles the rest.
 
 | Decision | Choices | Keeps | Removes | Recorded in |
 | --- | --- | --- | --- | --- |
 | Project state | No code yet · existing code | No code: `bootstrap.md` path. Existing: `adopt.md` path, `docs/audit/legacy-capabilities.md`, baselines | — | ADR-0001/0002 (retroactive when existing) |
 | Agents | Any of the eight above | Their lines in `.ai/agents`, and the files `sync-rules` generates | Generated files of agents not listed | `.ai/agents` |
-| Shape | Single app · monorepo | Single: the rules at the project root. Monorepo: the rules at the root, rule globs re-rooted under each app's directory, each app's own documents in `apps/<app>/docs/` | — | ADR-0002 |
-| Server stack, per app | Laravel · .NET · Next.js full-stack | `docs/conventions/stack-<name>.md` and `.ai/rules/<name>.md` for each stack in use | Profiles and rule files no app uses; then `sync-rules` | ADR-0001, `AGENTS.md` → **Stacks** |
-| Frontend, per app | Vue · Next.js · none | `stack-vue.md` and `vue.md`, or `stack-nextjs.md` and `nextjs.md` | As above | ADR-0001 |
+| Shape | Single app · monorepo | Single: the rules at the project root. Monorepo: the rules at the root, one **Stacks** row per app path scoping its profiles, each app's own documents in `apps/<app>/docs/` | — | ADR-0002 |
+| Profiles, per path | Any combination of Laravel · .NET · Next.js · React · Vue — e.g. Laravel with Vue or React in `resources/js`, or a Laravel API beside a Next.js app. Next.js brings React with it | `docs/conventions/stack-<name>.md` and `.ai/rules/<name>.md` for each profile in use | Profiles and rule files no path uses; then `sync-rules` | ADR-0001, `AGENTS.md` → **Stacks**, one row per path |
 | Next.js mode | Full-stack · frontend over another app's API | Both live in `stack-nextjs.md` | — | ADR-0001 |
 | Modularity | Not modular · Level 1 code · Level 2 data · Level 3 service | Everything; the modularity audit runs from G1 | Nothing. Not modular: the owner waives G1.2 and G3.6, citing ADR-0002 | ADR-0002 |
 | Acceptance scenarios | In `spec.md` · a Gherkin runner (Behat, Reqnroll, playwright-bdd) | Runner: `docs/templates/feature.feature`, and `features/` as specs are written | No runner: `docs/templates/feature.feature` | ADR-0001 |
-| Laravel Boost | Yes · no (Laravel apps only) | Yes: `php artisan boost:install` after installing the rules | — | ADR-0001 |
+| Laravel Boost | Yes · no (Laravel apps only) | Yes: `php artisan boost:install` after installing the rules; the installer reminds you when it finds Boost | — | ADR-0001 |
 | Code host | GitHub · other | GitHub: `.github/PULL_REQUEST_TEMPLATE/` | Other: those templates, their checklists ported to the host's | — |
 | Database, cache, queue, hosting | Per app | No file changes; each profile covers its data-access options | — | ADR-0001 |
 
@@ -198,10 +227,14 @@ surface, module — and state each rule once. A profile maps that vocabulary ont
 - .NET: a `sealed record` handled by an `internal` handler;
 - Next.js: a Zod schema behind a surface-wrapped server action.
 
+The frontend profiles — Vue, and React, which the Next.js profile builds on — realise `frontend.md`
+the same way.
+
 A profile adds its stack's own pitfalls, and may sharpen a core rule or follow a language idiom
-where it says so. It never relaxes a core rule. Rule files route by file extension (`**/*.php`,
-`**/*.cs`, `**/*.tsx`, `**/*.vue`), so Laravel's `app/` and the Next.js App Router's `app/` never
-collide.
+where it says so. It never relaxes a core rule. Stack rule files match by file type (`**/*.php`,
+`**/*.cs`, `**/*.tsx`, `**/*.vue`), and `AGENTS.md`'s **Stacks** table decides which stack binds
+which path, the most specific winning. So a Laravel app with React in `resources/js`, or a React
+admin beside a Next.js shop in one repository, each get exactly their own profiles.
 
 ### Four rule sets
 
@@ -284,17 +317,20 @@ Each concern has exactly one owning audit, so a finding is filed once and linked
 ```
 README.md                         This manual — stays with the kit
 AGENTS.md, CLAUDE.md              Instructions for agents maintaining the kit — stay with the kit
+install.sh                        The installer: install, update, remove
+manifest                          Which template files each answer keeps, and how each is managed
+release.sh                        Checks the kit and builds one release's assets
 template/                         The ruleset — installed into a project
   AGENTS.md                       The project's entry point for every agent: authority, stacks,
                                   rules for every agent, spec-driven development, read-before-write
   CLAUDE.md                       Imports AGENTS.md for Claude Code
   .ai/
-    agents                        The coding agents in use — the project uncomments its own
+    agents                        The coding agents in use — filled by the installer
     bin/sync-rules                Generates each agent's native rule files and the rules index
     bin/check                     The agent-independent gate for CI
     rules/                        The one source of path-scoped rules, in Laravel Boost's format
       general backend frontend database tests specs docs audits    — core
-      laravel dotnet nextjs vue                                    — per stack
+      laravel dotnet nextjs react vue                              — per stack
     prompts/
       bootstrap.md                Phase 0 for a project with no code yet
       adopt.md                    Adoption of a project that already has code
@@ -303,7 +339,7 @@ template/                         The ruleset — installed into a project
     conventions/                  Normative rules
       architecture coding frontend security testing                — how code is written, any stack
       specs                                                        — how behaviour is specified
-      stack-laravel stack-dotnet stack-nextjs stack-vue            — how each stack realises the core
+      stack-laravel stack-dotnet stack-nextjs stack-react stack-vue — how each stack realises the core
       documentation auditing lifecycle                             — how the project is run
     templates/                    One template per document type (13)
     audit/readiness.md            Living tracker of every gate criterion, starting at 0 of 40
@@ -324,11 +360,15 @@ invariants a change must keep.
   - add `template/.ai/rules/<name>.md` with its globs;
   - add the profile's row to the payload `AGENTS.md`;
   - add a *Stack notes* row to every audit prompt;
+  - add its `profile=<name>` lines to `manifest`, and teach `install.sh` the name (`KNOWN_PROFILES`,
+    `profile_name`) and how to detect it (`detect_apps`);
   - add the stack to [Choosing your configuration](#choosing-your-configuration).
 - **An agent:**
   - check its current documentation for where rules live and how a rule declares its files;
   - add a case to `render` in `template/.ai/bin/sync-rules`, its directory to `AGENT_DIRS` and its
     key to `KNOWN`;
+  - add the same key to `KNOWN_AGENTS` in `install.sh` (`release.sh` refuses a mismatch), its
+    directories to `AGENT_DIRS` and `TRACKED_DIRS`, and its traces to `detect_agents`;
   - add its line to `template/.ai/agents`, and its row to the table above;
   - smoke-run on a scratch copy of `template/` with every agent enabled.
 - **An audit:** start from the `audit-prompt.md` template. Add it to the catalog and the ownership
@@ -336,95 +376,97 @@ invariants a change must keep.
 - **A trap found while using the rules in a project:** record it in that project's `.ai/rules/`. If
   it holds for every project, bring it back here.
 
-## Roadmap: the installer
+## The installer
 
-Not built yet.
+`install.sh`, `manifest` and `release.sh`, at the root of this repository.
 
-**Decided:**
-- Bash, compatible with 3.2.
-- Rules only: it never creates a project, application code or project infrastructure.
-- One `install.sh`, fetched over HTTPS without cloning.
-- One behaviour for a new or an existing project, with or without git.
-- `install`, `update` and `remove`.
-- The project's file always wins; the kit's version is written beside it as
-  `<file>.specforge-incoming`.
-- What was installed is recorded in `.ai/specforge.lock`.
+### What it does
 
-**Open:**
-- where it is hosted, and the install URL;
-- the release and tag scheme;
-- the format of the root `manifest`, which maps each choice to template paths, and of
-  `.ai/specforge.lock`.
+1. **Detect**, read-only:
+   - apps and stacks: `artisan` with `laravel/framework`; a `*.sln` or `*.slnx`, else a web
+     `*.csproj`; `next`, `react` or `vue` among a `package.json`'s dependencies. A Vue or React
+     frontend inside a Laravel app is placed at `resources/js`;
+   - the agents already configured, the code host, a `features/` directory, Laravel Boost;
+   - in a git work tree, with `git` installed: uncommitted changes, reported, and the commit, recorded.
+2. **Ask** the five questions, or read them from `--answers`, or take what was detected with `--yes`.
+3. **Fetch** its own release's tarball and verify the published SHA-256 before unpacking, or use
+   `--from`.
+4. **Select** from the `manifest`: every template file, less the profiles no path uses (every profile
+   while none is decided), the Gherkin template without a runner, and the pull-request templates off
+   GitHub.
+5. **Apply** one policy to every file, below. `--dry-run` reports it and writes nothing.
+6. **Fill** `.ai/agents` and the **Stacks** table, then run `.ai/bin/sync-rules`.
+7. **Record** `.ai/specforge.lock`: the version, the answers, the commit, and a checksum per file.
+8. **Hand over** to bootstrap or adopt, listing what is left to reconcile.
 
-### Intended use
+### The policy
 
-```bash
-# into the current directory, interactively
-curl -fsSL https://<host>/install.sh | bash -s -- install
+| File | `install` / `update` | `remove` |
+| --- | --- | --- |
+| Absent, never installed | Write it | — |
+| Absent, but installed before | You deleted it: not restored, and remembered | — |
+| As the kit installed it | Replace it with the new version | Delete it |
+| Changed by you, and the kit's version unchanged since | Yours stands; nothing is written | Keep it |
+| Changed by you, or the project's own, and the kit's version differs | Keep it; write the kit's beside it as `<file>.specforge-incoming` | Keep it |
+| No longer selected (dropped by the kit, or its profile deselected) | Delete it if unchanged; otherwise keep it and report it | — |
+| `AGENTS.md`, `CLAUDE.md` | The rows above, applied only to the text between `<!-- specforge:begin -->` and `<!-- specforge:end -->`; an existing file gets the block appended | Take the block out; delete the file only if the kit created it and it is unchanged |
+| `.ai/agents` | Written once, then the project's | Delete it if unchanged |
+| `.ai/rules/index.md`, the agents' rule files | Written by `.ai/bin/sync-rules` | Deleted; generated files carry its marker |
+| README, ignore files, CI, anything outside the payload | Never touched | — |
 
-# into another directory, no prompts — CI, or a second project with the same architecture
-curl -fsSL https://<host>/install.sh | bash -s -- install --dir ~/code/my-app --answers rules.answers
+`.ai/bin/check` warns, without failing, while a `*.specforge-incoming` file awaits reconciliation.
 
-# later: newer rules, your edits kept — or take back exactly what was installed
-curl -fsSL https://<host>/install.sh | bash -s -- update
-curl -fsSL https://<host>/install.sh | bash -s -- remove
+### The manifest
 
-# read before you run — recommended for anything piped to a shell
-curl -fsSLo install.sh https://<host>/install.sh && less install.sh && bash install.sh install --dry-run
+Every template file is installed unless a manifest line says otherwise:
+
+```
+<selector>  <template path>  [mode]
 ```
 
-### What it will do
+- **Selectors:** `always`, `profile=<name>`, `gherkin=<yes|no>`, `host=<github|other>`.
+- **Modes:** `file` (the default), `block`, `seed`, `generated`.
+- **Implications:** `implies nextjs react` installs React's profile with Next.js's.
 
-1. **Detect:**
-   - stacks: `composer.json` with `artisan`; `*.sln`/`*.csproj`; `next.config.*`; `vue` in
-     `package.json`;
-   - the layout, and Laravel Boost;
-   - the agents already configured, and instruction or docs files already present.
+A new template file needs no line unless only some answers keep it.
 
-   A project with no code detects nothing.
-2. **Ask** the questions in [Choosing your configuration](#choosing-your-configuration), each
-   defaulting to what detection found. Answers come from prompts, flags, or an answers file, which
-   is parsed, never sourced.
-3. **Fetch** the tarball of its pinned release and verify its published SHA-256 checksum.
-4. **Plan** every file it would write, keep or skip. `--dry-run` stops here.
-5. **Install** under one policy for first installs and updates alike:
-
-   | File | `install` / `update` | `remove` |
-   | --- | --- | --- |
-   | Not present | Write it | — |
-   | Installed by the kit, unmodified since (checksum matches) | Update it | Delete it |
-   | Modified since, or the project's own | Keep it; write the kit's beside it as `*.specforge-incoming`, and report it | Keep it |
-   | Shared entry files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`) | Write only between `<!-- specforge:begin -->` and `<!-- specforge:end -->` | Remove that block |
-   | Your README, ignore files, settings JSON | Never touched; print what to add | — |
-
-6. **Fill** what the answers already decide:
-   - the **Stacks** table;
-   - ADR-0001 and ADR-0002 drafts;
-   - rule globs re-rooted for a monorepo.
-
-   Then run `.ai/bin/sync-rules` for the chosen agents.
-7. **Record** in `.ai/specforge.lock` the kit version, the answers, and a checksum of every
-   installed file.
-8. **Hand over:** to `bootstrap.md` when there is no code, to `adopt.md` when there is. Either then
-   asks only what a script cannot.
-
-### Guarantees it will keep
+### Guarantees
 
 - **Safe to pipe:**
-  - the body is one function, called on the last line, so a truncated download runs nothing;
-  - prompts read from `/dev/tty`, because stdin is the script.
-- **Portable:** Bash 3.2 throughout, needing only `curl`, `tar` and POSIX tools — not `git`.
+  - every statement lives in a function, and the only call is on the last line, so a truncated
+    download runs nothing (the tests cut the script at every 1,500 bytes);
+  - prompts read from `/dev/tty`, because stdin is the script; with no terminal and no answers, it
+    refuses.
+- **Portable:** Bash 3.2 throughout, needing only `curl`, `tar` and POSIX tools; `git` only to
+  report on a work tree.
 - **Never overwrites** a file it did not install unmodified.
-- **Version control is optional:** in a git work tree it reports uncommitted changes and records
-  the commit, but never commits or creates a branch.
-- **Contained:** it writes nothing outside the target directory, never uses `sudo`, and makes no
-  network call beyond the release download.
+- **Version control is optional:** in a git work tree it reports and records, but never commits,
+  stages or creates a branch.
+- **Contained:** it writes nothing outside the target directory and its own temporary directory,
+  never uses `sudo`, and makes no network call beyond the release download. It refuses a directory
+  that does not exist: it adds rules to a project; it does not create one.
+
+### Releasing
+
+```bash
+./release.sh v1.0.0 --repo <org>/specforge
+```
+
+It checks the kit first. Then it builds the three release assets (the stamped `install.sh`, the
+tarball, and its checksum) and prints the `gh release create` command. It publishes nothing. The
+checks:
+
+- every script parses;
+- every manifest line names a known selector, a known mode and an existing path;
+- `template/` ships no generated agent file, no lock, no incoming file, and no enabled agent;
+- `install.sh`, `sync-rules` and the manifest agree on the agents and profiles;
+- `sync-rules --check` passes on a scratch copy of `template/`.
 
 ## Origin
 
 Derived from the rulesets of the zuus monorepo (`30443ad8b`, 2026-11-22): its `AGENTS.md`,
 conventions, templates, app-level conventions, pull-request templates and database-schema audit
-prompt. They were generalised, split into a stack-neutral core with four profiles, and extended
+prompt. They were generalised, split into a stack-neutral core with five profiles, and extended
 with:
 
 - spec-driven development, with a legacy path for existing code;

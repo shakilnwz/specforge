@@ -82,6 +82,7 @@ breaks a naming rule or the stack idiom, or says something the code does not do.
 | Laravel | No `Interface`/`Contract` suffix; no `Job` suffix outside tiers; kebab-case route names and Blade files; `by<Attribute>` filters |
 | .NET | `I` prefix on interfaces; `Async` suffix; `_camelCase` fields; `<Verb><Noun>Handler`, `…Command`, `…Response`; namespaces match folders |
 | Next.js | kebab-case files; PascalCase components and types; `use-*.ts` hooks; no `I` prefix; no TypeScript `enum` |
+| React | kebab-case files; PascalCase components and types; `use-*.ts` hooks; `*-page.tsx` pages; `<Thing>Schema` Zod schemas; no `I` prefix; no TypeScript `enum` |
 | Vue | PascalCase SFCs; `Base`/`The` prefixes; `use*` composables; named routes `<Resource><Action>` |
 
 ## Output

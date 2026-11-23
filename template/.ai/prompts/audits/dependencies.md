@@ -67,7 +67,7 @@ incompatible with the project's distribution, or a CI action pinned to a mutable
 | --- | --- |
 | Laravel | `composer audit`, `composer outdated --direct`; unused packages with `composer-unused` run from outside the tree; check `require` against `require-dev` |
 | .NET | `dotnet list package --vulnerable --include-transitive`, `--outdated`, `--deprecated`; versions central in `Directory.Packages.props`; check the runtime against the .NET support policy (LTS vs STS) |
-| Next.js / Vue | `pnpm audit` / `npm audit`, `pnpm outdated`; unused packages with `knip`; check `dependencies` against `devDependencies` — a dev tool in `dependencies` ships to production images |
+| Next.js / React / Vue | `pnpm audit` / `npm audit`, `pnpm outdated`; unused packages with `knip`; check `dependencies` against `devDependencies` — a dev tool in `dependencies` ships to production images |
 
 ## Output
 

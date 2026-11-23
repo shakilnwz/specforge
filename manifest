@@ -1,0 +1,39 @@
+# SpecForge manifest — read by install.sh, checked by release.sh.
+#
+# Every file under template/ is installed, as an ordinary file, unless a line below says otherwise.
+#
+#   <selector> <template path> [mode]
+#
+# selector   always · profile=<laravel|dotnet|nextjs|react|vue> · gherkin=<yes|no> · host=<github|other>
+#            A path listed under several selectors is installed when any of them holds.
+# path       a file, or a directory ending in /
+# mode       file       (default) updated while unmodified; kept, with the kit's version beside it as
+#                       <file>.specforge-incoming, once the project has changed it
+#            block      only the text between <!-- specforge:begin --> and <!-- specforge:end --> is
+#                       the kit's; an existing file gets the block appended
+#            seed       written once, then the project's: never updated
+#            generated  never copied; .ai/bin/sync-rules writes it
+#
+#   implies <profile> <profile>    choosing the first profile also installs the second
+
+implies nextjs react
+
+always           AGENTS.md                              block
+always           CLAUDE.md                              block
+always           .ai/agents                             seed
+always           .ai/rules/index.md                     generated
+
+profile=laravel  docs/conventions/stack-laravel.md
+profile=laravel  .ai/rules/laravel.md
+profile=dotnet   docs/conventions/stack-dotnet.md
+profile=dotnet   .ai/rules/dotnet.md
+profile=nextjs   docs/conventions/stack-nextjs.md
+profile=nextjs   .ai/rules/nextjs.md
+profile=react    docs/conventions/stack-react.md
+profile=react    .ai/rules/react.md
+profile=vue      docs/conventions/stack-vue.md
+profile=vue      .ai/rules/vue.md
+
+gherkin=yes      docs/templates/feature.feature
+
+host=github      .github/PULL_REQUEST_TEMPLATE/

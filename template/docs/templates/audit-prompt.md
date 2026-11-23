@@ -60,6 +60,7 @@ How the method differs per stack — the patterns, tools and mechanisms to look 
 | Laravel | <…> |
 | .NET | <…> |
 | Next.js | <…> |
+| React | <…> |
 | Vue | <…> |
 
 ## Output

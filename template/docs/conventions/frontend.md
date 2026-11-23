@@ -6,8 +6,9 @@ even if it works. [`architecture.md`](architecture.md) governs the server a fron
 browser, whatever the framework.
 
 The framework's profile realises these rules: [`stack-vue.md`](stack-vue.md) for Vue SPAs,
-[`stack-nextjs.md`](stack-nextjs.md) for Next.js and React. A profile names directories and
-mechanisms; it never relaxes a rule here.
+[`stack-react.md`](stack-react.md) for React SPAs, and [`stack-nextjs.md`](stack-nextjs.md), built
+on the React profile, for Next.js. A profile names directories and mechanisms; it never relaxes a
+rule here.
 
 ## Scope
 
@@ -110,4 +111,4 @@ features mirror its modules, so one domain has one name on both sides.
 
 ---
 
-Related: [`stack-vue.md`](stack-vue.md) · [`stack-nextjs.md`](stack-nextjs.md) · [`security.md`](security.md)
+Related: [`stack-vue.md`](stack-vue.md) · [`stack-react.md`](stack-react.md) · [`stack-nextjs.md`](stack-nextjs.md) · [`security.md`](security.md)

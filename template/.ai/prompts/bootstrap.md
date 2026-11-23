@@ -38,10 +38,13 @@ Ask in one round, grouped, with a recommended default for each where one exists:
    that should be retired.
 4. **External systems:** payment, mail, storage, DNS, identity, search — each with its provider if
    chosen.
-5. **Stack, per app:** Laravel, .NET or Next.js for the server; Vue or Next.js for the frontend; the
-   major versions; database; cache and queue; hosting. The rules ship profiles for
+5. **Stack, per app:** Laravel, .NET or Next.js for the server; Vue, React or Next.js for the
+   frontend — any combination, each with the path it lives in (a frontend inside a server app, such
+   as `resources/js` or `ClientApp`, has its own path); the major versions; database; cache and
+   queue; hosting. The rules ship profiles for
    [Laravel](../../docs/conventions/stack-laravel.md), [.NET](../../docs/conventions/stack-dotnet.md),
-   [Next.js](../../docs/conventions/stack-nextjs.md) and [Vue](../../docs/conventions/stack-vue.md).
+   [Next.js](../../docs/conventions/stack-nextjs.md) (built on React),
+   [React](../../docs/conventions/stack-react.md) and [Vue](../../docs/conventions/stack-vue.md).
    For Next.js, also: full-stack, or a frontend over another app's API.
 6. **Shape:** single app or monorepo; which apps; which surfaces each app has (who is on the other
    end, which host, which authentication); modular or not — and if modular, the modules, the shared
@@ -64,17 +67,21 @@ Ask in one round, grouped, with a recommended default for each where one exists:
    numbered in the order they will be specified, each to become `docs/specs/NNNN-<capability>/`.
 3. Seed `docs/reference/glossary.md` from [`reference.md`](../../docs/templates/reference.md): one
    row per concept — the term, its one-line meaning, and the names it must not be called.
-4. Fill `AGENTS.md`: the **Stacks** table (each app, its path, its profiles); **Architecture
+4. Fill `AGENTS.md`: the **Stacks** table — one row per path with its own profiles, a frontend
+   inside a server app on a row of its own, since the most specific path wins; **Architecture
    Overview** from the ADRs; **Common Commands**, **Local Endpoints** and **Database** once the
    environment exists (otherwise leave the placeholder and say so).
 5. **Trim the rules to the stacks in use**, once the owner approves ADR-0001: list the profiles, the
    `.ai/rules/` stack files and the PR-template lines no app uses, and remove them with the owner's
    approval. Never remove a core convention.
-6. Adjust the `paths:` globs in `.ai/rules/*.md` to the real layout — app directories in a monorepo,
-   module directories when modular — keeping the frontmatter in the form Laravel Boost writes back.
-7. **Configure the agents:** uncomment each agent the owner named in `.ai/agents`, then run
-   `.ai/bin/sync-rules`. It generates every agent's rule files and regenerates
-   `.ai/rules/index.md`; a `conflict:` line names a file it will not overwrite.
+6. Leave the stack rule files' globs as installed: they match by file type, and the **Stacks** table
+   decides which stack binds which path (`.ai/rules/general.md`). Adjust a core rule file's `paths:`
+   only where the layout needs it — module directories when modular — keeping the frontmatter in the
+   form Laravel Boost writes back.
+7. **Configure the agents:** confirm `.ai/agents` lists each agent the owner named — the installer
+   fills it from its answers — then run `.ai/bin/sync-rules` after any change. It generates every
+   agent's rule files and regenerates `.ai/rules/index.md`; a `conflict:` line names a file it will
+   not overwrite.
 8. Fill the surface-declaration table in `architecture.md` from ADR-0002, leaving the mechanism
    column to the profile.
 9. **Check, do not create, what G0 asks of the project:** ignore files and `.editorconfig` (G0.6),

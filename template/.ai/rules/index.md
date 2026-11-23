@@ -9,10 +9,11 @@ Before planning or editing, find the row whose globs match the file's path and r
 | **/Migrations/**, **/migrations/**, database/**, drizzle/**, modules/**/database/**, prisma/** | .ai/rules/database.md |
 | AGENTS.md, README.md, apps/*/docs/**, docs/** | .ai/rules/docs.md |
 | **/*.cs, **/*.csproj, **/*.sln, **/*.slnx, Directory.Build.props, Directory.Packages.props | .ai/rules/dotnet.md |
-| **/*.css, **/*.tsx, **/*.vue, modules/**/resources/**, packages/js/**, resources/** | .ai/rules/frontend.md |
+| **/*.css, **/*.jsx, **/*.tsx, **/*.vue, modules/**/resources/**, packages/js/**, resources/** | .ai/rules/frontend.md |
 | ** | .ai/rules/general.md |
 | **/*.php, composer.json | .ai/rules/laravel.md |
 | **/*.tsx, **/middleware.ts, **/proxy.ts, next.config.*, src/app/**, src/modules/**, src/server/** | .ai/rules/nextjs.md |
+| **/*.jsx, **/*.tsx | .ai/rules/react.md |
 | apps/*/docs/specs/**, apps/*/features/**, docs/specs/**, features/** | .ai/rules/specs.md |
 | **/*.Tests/**, **/*.spec.ts, **/*.test.ts, **/*.test.tsx, e2e/**, modules/**/tests/**, tests/** | .ai/rules/tests.md |
 | **/*.vue | .ai/rules/vue.md |

@@ -3,8 +3,9 @@
 How the core conventions are realised in a Laravel app, and the rules only Laravel needs.
 Normative for every app the **Stacks** table in `AGENTS.md` assigns to Laravel. It realises
 [`architecture.md`](architecture.md), [`coding.md`](coding.md), [`security.md`](security.md) and
-[`testing.md`](testing.md); it never relaxes them. A Vue frontend in the same app follows
-[`stack-vue.md`](stack-vue.md).
+[`testing.md`](testing.md); it never relaxes them. A Vue or React frontend in the same app follows
+[`stack-vue.md`](stack-vue.md) or [`stack-react.md`](stack-react.md), under its own row of the
+**Stacks** table.
 
 ## Scope
 
@@ -249,7 +250,7 @@ envelope is `response()->json(['message' => trans('…')])`.
 | --- | --- |
 | Deny by default | Surface guard on every mount; `auth.php` the only exception |
 | Record authorization | Policies, `can:` route middleware, `Gate::authorize()` inside the Action |
-| Raw-HTML sinks | `{!! !!}` in Blade, `v-html` in Vue, `|raw` in Twig |
+| Raw-HTML sinks | `{!! !!}` in Blade, `v-html` in Vue, `dangerouslySetInnerHTML` in React, `|raw` in Twig |
 | Row lock | `lockForUpdate()` inside `DB::transaction()` |
 | Raw SQL | `DB::raw`, `selectRaw`, `whereRaw`, `orderByRaw` — bindings only |
 | Signed surface | `signed` middleware on the mount; `URL::temporarySignedRoute()` |
@@ -278,4 +279,4 @@ envelope is `response()->json(['message' => trans('…')])`.
 
 ---
 
-Related: [`stack-vue.md`](stack-vue.md) · [`architecture.md`](architecture.md) · [`coding.md`](coding.md)
+Related: [`stack-vue.md`](stack-vue.md) · [`stack-react.md`](stack-react.md) · [`architecture.md`](architecture.md) · [`coding.md`](coding.md)

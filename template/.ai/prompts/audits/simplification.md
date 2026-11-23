@@ -82,6 +82,7 @@ get there.
 | Laravel | Reinvention of collections, `Str`, `Http`, `Cache::remember`, `RateLimiter`, validation rules; service classes wrapping one Eloquent call |
 | .NET | Generic repositories and unit-of-work wrappers over `DbContext`; mediator pipelines for in-process calls with one handler each; interfaces registered once and mocked nowhere; hand-written mapping where a projection does |
 | Next.js | `'use client'` on components that need none; client-side fetching for data a Server Component can read; state libraries holding server data; wrapper components that only pass props |
+| React | Effects that derived state or an event handler replaces; server data mirrored into a store; memoisation no measurement justifies; wrapper components that only pass props; context for values one subtree uses |
 | Vue | Stores holding one view's state; watchers that a computed replaces; prop drilling a provide/inject or store would remove |
 
 ## Output

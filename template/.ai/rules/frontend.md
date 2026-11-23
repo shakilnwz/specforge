@@ -1,6 +1,7 @@
 ---
 paths:
   - '**/*.css'
+  - '**/*.jsx'
   - '**/*.tsx'
   - '**/*.vue'
   - 'modules/**/resources/**'

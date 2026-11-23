@@ -79,6 +79,7 @@ size is reducible — say why for each.
 | Laravel | `lizard -l php`, or a `nikic/php-parser` walker from the app's own `vendor/` in a scratch script |
 | .NET | `lizard -l csharp`, or CA1502 with `CodeMetricsConfig.txt` (`CA1502: 10`) built in a scratch copy of the solution |
 | Next.js | `lizard -l typescript` (TSX included), or ESLint's `complexity` rule at 10 run from outside the tree |
+| React | `lizard -l typescript` (TSX included), or ESLint's `complexity` rule at 10 run from outside the tree; a component's hook count as a size signal |
 | Vue | Extract each `<script setup>` block to a scratch `.ts` file, then measure as TypeScript |
 
 ## Output

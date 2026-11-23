@@ -76,6 +76,7 @@ paid on every request that need not be. State the growth: linear in what, per wh
 | Laravel | `preventLazyLoading()`; `config:cache`, `route:cache`, `view:cache`, `event:cache` in deploy; opcache and FPM worker counts; xdebug off |
 | .NET | Lazy-loading proxies or per-row queries in loops; tracking queries on reads (`AsNoTracking` missing); cartesian explosion from several `Include`s without `AsSplitQuery`; sync-over-async blocking the thread pool; `HttpClient` created per request; output caching and response compression |
 | Next.js | Request waterfalls in Server Components; `'use client'` sprawl inflating client bundles; uncached reads on hot pages and blanket dynamic rendering; RSC payload size; images outside `next/image`; `@next/bundle-analyzer` per route |
+| React | Route-level lazy loading; heavy dependencies in the entry chunk; re-render cascades from unstable context values or props; long lists without virtualisation; `rollup-plugin-visualizer` per route |
 | Vue | Route-level code splitting; heavy dependencies in the entry chunk; deep reactivity over large lists |
 
 ## Output

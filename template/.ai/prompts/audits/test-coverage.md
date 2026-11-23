@@ -77,6 +77,7 @@ fakes the thing under test).
 | Laravel | Tags: `->group('NNNN.Rn')`; run one with `php artisan test --group=NNNN.Rn`; arch tests under `tests/Arch` |
 | .NET | Tags: `[Trait("Requirement", "NNNN.Rn")]`; feature tests through `WebApplicationFactory`; flag `UseInMemoryDatabase` in tests |
 | Next.js | Tags: `[NNNN.Rn]` title prefix in Vitest, `@NNNN.Rn` Playwright tags; check every exported server action has a direct test |
+| React | Tags: `[NNNN.Rn]` title prefix in Vitest, `@NNNN.Rn` Playwright tags; component tests with Testing Library querying by role; MSW at the HTTP boundary |
 | Vue | Component tests with Vue Test Utils titled with requirement IDs; journeys in Playwright |
 | Gherkin | Every scenario in `features/` carries its `@NNNN.Rn` tag; `@pending` on an Implemented spec is a finding |
 

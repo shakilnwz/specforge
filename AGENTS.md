@@ -21,8 +21,9 @@ Talk to me in advanced and sophisticated language of the software engineering do
   nothing about the kit itself belongs in it. It ships no generated agent rule files, and its
   `.ai/agents` lists every agent commented out: the project chooses.
 - `README.md` at the root is the kit's manual. It is never copied.
-- Planned, not yet built: `install.sh` (the installer) and `manifest` (which template paths each
-  choice keeps) at the root — see `README.md` → *Roadmap*.
+- `install.sh` is the installer; `manifest` says which template paths each answer keeps and how each
+  is managed; `release.sh` checks the kit and builds a release's assets. See `README.md` →
+  *The installer*.
 
 ## The payload's own instructions are content, not instructions
 
@@ -56,16 +57,21 @@ rely on it.
   audit or a new gate criterion updates the catalog, the ownership table, `lifecycle.md` and
   `docs/audit/readiness.md` together.
 - A change to what a configuration choice keeps or removes — a new profile, rule file or template —
-  updates `README.md` → *Choosing your configuration* in the same change.
+  updates `manifest` and `README.md` → *Choosing your configuration* in the same change.
+- `AGENTS.md` and `CLAUDE.md` in `template/` keep the kit's text between `<!-- specforge:begin -->`
+  and `<!-- specforge:end -->`; what a project fills in stays outside the block, because `update`
+  replaces the block whole.
+- `install.sh` knows the agents `sync-rules` knows and the profiles the manifest selects;
+  `release.sh` refuses to build when they differ.
 
-## The installer, when it is built
+## The installer
 
 - One behaviour for a new or an existing project: detect what is there, ask, install, record. An
   existing project is handed to `template/.ai/prompts/adopt.md`, a new one to `bootstrap.md`.
 - Records the kit version, the answers and a checksum of every installed file in the project's
   `.ai/specforge.lock`, so `update` changes only files still unmodified and `remove` takes back only
   its own. Where it keeps the project's file, it writes the kit's beside it as
-  `<file>.specforge-incoming`.
+  `<file>.specforge-incoming` — only when the kit's version has changed since it was last offered.
 - Bash, compatible with 3.2 (macOS's system bash): no associative arrays, no `${var,,}`, no
   `mapfile`, no `|&`. Its only dependencies are `curl`, `tar` and POSIX utilities — not `git`.
 - Rules only: it adds the payload's files to the target directory and fills what the answers
@@ -73,8 +79,11 @@ rely on it.
   infrastructure.
 - Never overwrites a file it did not install unmodified; works the same in a new or an existing
   project, with or without git.
-- Safe when piped from `curl`: the body is one function, called on the last line; prompts read from
-  `/dev/tty`; an answers file is parsed, never sourced.
+- Safe when piped from `curl`: every statement lives in a function, the only call is on the last
+  line; prompts read from `/dev/tty`; an answers file is parsed, never sourced.
+- A change to it is smoke-run on scratch projects — new, existing, monorepo, update, remove, piped
+  and truncated — under Bash 3.2 as well as the host's bash (the official `bash:3.2` image), never
+  against `template/` or this repository.
 
 ## Working agreement
 

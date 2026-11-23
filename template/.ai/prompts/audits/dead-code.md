@@ -74,6 +74,7 @@ separately; only certain findings carry a "delete" fix.
 | Laravel | Search by FQCN, short name and string; routes from `php artisan route:list --json`; unused packages with `composer-unused` |
 | .NET | Build a scratch copy with IDE0051, IDE0052 and CA1812 as warnings; `public` types unreferenced outside their project; unused `PackageReference`s |
 | Next.js | `knip`, run from outside the tree, for unused files, exports and dependencies; a `page.tsx` is reachable by URL even when nothing links it — dead only if no spec requires it |
+| React | `knip`, run from outside the tree, for unused files, exports and dependencies; components never rendered; routes no navigation reaches |
 | Vue | `knip` with its Vue support; components never imported; routes no navigation reaches |
 
 ## Output

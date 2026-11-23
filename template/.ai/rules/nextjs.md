@@ -13,8 +13,10 @@ paths:
 
 ## Bound conventions
 `docs/conventions/stack-nextjs.md` realises the core conventions for every Next.js app, in the mode
-ADR-0001 names (full-stack, or a frontend over another app's API). Read it beside the core section it
-realises; where the two seem to disagree, the core wins and the profile is a defect to report.
+ADR-0001 names (full-stack, or a frontend over another app's API), on top of
+`docs/conventions/stack-react.md` — `.ai/rules/react.md` binds the same files. Read it beside the
+core section it realises; where the two seem to disagree, the core wins and the profile is a defect
+to report.
 
 ## Traps agents fall into here
 - `app/` is routing only. Domain code lives in `src/modules/<module>/`; server code in its `server/`,

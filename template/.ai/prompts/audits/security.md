@@ -87,6 +87,7 @@ silently void. A rule broken only on an unreachable path is a Low hardening note
 | Laravel | Surface: `php artisan route:list --json`. Sinks: `{!!`, `v-html`, `DB::raw`, `selectRaw`, `whereRaw`, `orderByRaw`, `$request->all()`, `unserialize`, `exec`, `shell_exec`, `Storage::url` on private disks, `withoutMiddleware`, CSRF `except` entries |
 | .NET | Surface: the OpenAPI document plus every `Map*` and controller. Sinks: `[AllowAnonymous]`, endpoints outside a group with a policy, `FromSqlRaw` with concatenation, `@Html.Raw`, `MarkupString`, entities as request bodies (over-posting), `BinaryFormatter` and `TypeNameHandling` deserialisation, `Process.Start`, missing antiforgery on cookie-authenticated forms, `HttpClient` with absolute URLs from input |
 | Next.js | Surface: every exported server action, every `route.ts`, every `page.tsx`. Sinks: unwrapped actions, authorization only in `proxy.ts`/`middleware.ts` or layouts, `dangerouslySetInnerHTML`, secrets behind `NEXT_PUBLIC_`, server modules without `server-only`, raw SQL through `$queryRawUnsafe` or string building, ids trusted from closures or hidden fields |
+| React | `dangerouslySetInnerHTML`; `javascript:` URLs from data in `href` or `src`; tokens in `localStorage`; API base URLs built from input |
 | Vue | `v-html`; tokens in `localStorage`; API base URLs built from input |
 
 ## Output

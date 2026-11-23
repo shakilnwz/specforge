@@ -83,6 +83,7 @@ convention-conforming one — and why.
 | Laravel | Compare `bootstrap/app.php` middleware stacks, `config/queue.php`, model date serialisation, Resource shapes, route-name patterns (`*.status.update` against `*.update-status`) |
 | .NET | Compare `Program.cs` pipelines, exception handlers and ProblemDetails customisation, `JsonSerializerOptions`, policies per surface |
 | Next.js | Compare surface wrappers, server-action result shapes, fetch and cache options, error boundaries |
+| React | Count HTTP clients, query-key schemes, i18n set-ups, notification and table implementations across SPAs |
 | Vue | Count HTTP clients, i18n set-ups, notification and table implementations across SPAs |
 | Across stacks | When two apps on different stacks serve the same domain, compare their API contracts and enums field by field |
 

@@ -89,6 +89,7 @@ or a graph no tool enforces.
 | Laravel | Explicit edges: `grep -rn "^use Modules\\\\" modules/<A>/` minus `Modules\<A>`; invisible: `<module>::` in PHP, Blade and Twig, `config('<module>.')`; enforcement: `deptrac` |
 | .NET | Explicit edges: `<ProjectReference>`s (only `.Contracts` allowed) and `using` of other modules' namespaces; visibility: `public` types outside `.Contracts`, `InternalsVisibleTo` beyond the test project; data: one `DbContext` per module, `HasDefaultSchema`; enforcement: NetArchTest or ArchUnitNET |
 | Next.js | Explicit edges: imports of `@/modules/<other>/…` beyond `index.ts` and `server/index.ts`; `server-only` respected; enforcement: `dependency-cruiser` or `eslint-plugin-boundaries`, run with `npx` from outside the tree |
+| React | Feature folders importing another feature's internals instead of its `index.ts`; enforcement: `eslint-plugin-boundaries` or `dependency-cruiser` |
 | Vue | Feature folders importing another feature's internals instead of its `index.ts` |
 
 ## Output

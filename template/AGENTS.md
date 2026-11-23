@@ -17,12 +17,19 @@ started before the current gate closes unless the user asks for it.
 
 ## Stacks
 
-Each app is bound to the stack profiles that realise the core conventions for it. A profile never
-relaxes a core rule; where the two seem to disagree, the core wins and the profile is a defect.
+Each app is bound to the stack profiles that realise the core conventions for it. This table is the
+authority for which profile binds which path: the stack rule files in `.ai/rules/` match by file
+type, and bind only where a row assigns their stack — a frontend inside a server app is its own row,
+and the most specific path wins. A profile never relaxes a core rule; where the two seem to
+disagree, the core wins and the profile is a defect.
 
 | App / path | Stack | Profiles |
 | --- | --- | --- |
-| <!-- bootstrap: `<path>` --> | <!-- bootstrap: Laravel · .NET · Next.js, with versions --> | <!-- bootstrap: [`stack-<name>.md`](docs/conventions/stack-<name>.md), one per stack the app uses --> |
+| <!-- bootstrap: `<path>` --> | <!-- bootstrap: Laravel · .NET · Next.js · React · Vue, with versions --> | <!-- bootstrap: [`stack-<name>.md`](docs/conventions/stack-<name>.md), one per stack the app uses --> |
+
+<!-- specforge:begin -->
+<!-- Maintained by SpecForge: its update replaces everything up to specforge:end. Write project
+     text outside this block; an edit inside it turns the next update into a manual merge. -->
 
 ## Rules for every agent
 
@@ -107,15 +114,9 @@ Stack profiles realise the core conventions per stack; the **Stacks** table bind
 | --- | --- |
 | [`stack-laravel.md`](docs/conventions/stack-laravel.md) | Laravel: modules, routes and surfaces, DataTables lists, models, PHP idiom, Pest |
 | [`stack-dotnet.md`](docs/conventions/stack-dotnet.md) | ASP.NET Core: solution layout, module visibility, minimal APIs, EF Core, C# idiom, xUnit |
-| [`stack-nextjs.md`](docs/conventions/stack-nextjs.md) | Next.js App Router: full-stack or frontend mode, server/client boundary, server actions, caching |
-| [`stack-vue.md`](docs/conventions/stack-vue.md) | Vue 3: the feature tree, views and partials, named routes, Pinia |
-
-An app's own `docs/conventions/` binds the paths it covers; read the matching file before touching
-them:
-
-| Path | Convention |
-| --- | --- |
-| <!-- bootstrap: `<glob>` --> | <!-- bootstrap: [`<file>.md`](<path>) --> |
+| [`stack-nextjs.md`](docs/conventions/stack-nextjs.md) | Next.js App Router, on top of the React profile: full-stack or frontend mode, server/client boundary, server actions, caching |
+| [`stack-react.md`](docs/conventions/stack-react.md) | React SPAs, and the base of the Next.js profile: the feature tree, pages and their partials, hooks and effects, server state in TanStack Query |
+| [`stack-vue.md`](docs/conventions/stack-vue.md) | Vue 3 SPAs: the feature tree, views and partials, named routes, Pinia |
 
 ## Audits
 
@@ -124,6 +125,17 @@ database write, no dependency change. Run one from its prompt in
 [`.ai/prompts/audits/`](.ai/prompts/audits/), under the protocol in
 [`auditing.md`](docs/conventions/auditing.md); write a new audit type from
 [`docs/templates/audit-prompt.md`](docs/templates/audit-prompt.md).
+
+<!-- specforge:end -->
+
+## App conventions
+
+An app's own `docs/conventions/` binds the paths it covers; read the matching file before touching
+them:
+
+| Path | Convention |
+| --- | --- |
+| <!-- bootstrap: `<glob>` --> | <!-- bootstrap: [`<file>.md`](<path>) --> |
 
 ## Architecture Overview
 

@@ -6,6 +6,10 @@ Next.js. It realises [`architecture.md`](architecture.md), [`coding.md`](coding.
 [`frontend.md`](frontend.md), [`security.md`](security.md) and [`testing.md`](testing.md); it never
 relaxes them. The Next.js and React versions, the ORM and the job host are fixed by the stack ADR.
 
+It builds on [`stack-react.md`](stack-react.md): components and hooks, naming, client state, forms
+and the raw-HTML rules follow that profile wherever this one names no Next.js mechanism of its own.
+The React profile's `pages/` tree gives way to this profile's *Layout*.
+
 ## Scope
 
 Applies to:
@@ -141,11 +145,10 @@ export const publishProduct = adminAction(PublishProductSchema, async (command, 
 | Security headers | `headers()` in `next.config` or `proxy.ts`, CSP with nonces where scripts are inline |
 | Images | `images.remotePatterns` lists exact hosts |
 
-## Frontend rules
+## Beyond the React profile
 
-- Files and folders are kebab-case (`product-card.tsx`), matching the routing files; components and
-  types are PascalCase; hooks are `use-<thing>.ts` exporting `use<Thing>`.
-- No TypeScript `enum`: an `as const` object and its union type. No `I` prefix on interfaces.
+- Naming follows [`stack-react.md`](stack-react.md) → *Naming*; its kebab-case files match the
+  routing files.
 - Navigation uses `<Link>` with typed routes (`typedRoutes: true`) or the route helper module; never
   a concatenated string.
 - Forms use the same Zod schema as the action — React Hook Form with its resolver, or
@@ -156,8 +159,8 @@ export const publishProduct = adminAction(PublishProductSchema, async (command, 
 
 ## Testing
 
-- Vitest for units, Queries and Actions (called directly with a constructed user), and components
-  with Testing Library; Playwright for journeys. MSW or the job host's test mode for outbound calls.
+- As [`stack-react.md`](stack-react.md) → *Tooling*, and: Vitest for Queries and Actions, called
+  directly with a constructed user; the job host's test mode for queued work.
 - Trace with a title prefix — `it('[0012.R3] refuses a withdrawal above the balance', …)`, filtered
   with `-t 0012.R3` — and with Playwright tags: `test('…', { tag: '@0012.R3' }, …)`.
 - An arch test lists every exported server action and route handler and asserts it is wrapped.
@@ -171,4 +174,4 @@ export const publishProduct = adminAction(PublishProductSchema, async (command, 
 
 ---
 
-Related: [`frontend.md`](frontend.md) · [`architecture.md`](architecture.md) · [`security.md`](security.md)
+Related: [`stack-react.md`](stack-react.md) · [`frontend.md`](frontend.md) · [`architecture.md`](architecture.md) · [`security.md`](security.md)

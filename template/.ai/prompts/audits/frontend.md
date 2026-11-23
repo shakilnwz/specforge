@@ -19,13 +19,14 @@ if the caller allows it.
    [`security.md`](../../../docs/conventions/security.md), and every app convention bound to the
    frontend paths in `AGENTS.md`, and each app's frontend profile
    ([`stack-vue.md`](../../../docs/conventions/stack-vue.md),
+   [`stack-react.md`](../../../docs/conventions/stack-react.md),
    [`stack-nextjs.md`](../../../docs/conventions/stack-nextjs.md)).
 3. Read prior frontend and localisation reports.
 
 ## Scope
 
-- **Default:** every frontend app — Vue SPAs, Next.js apps — every workspace UI package, every
-  server-rendered template, every translation file.
+- **Default:** every frontend app — Vue SPAs, React SPAs, Next.js apps — every workspace UI package,
+  every server-rendered template, every translation file.
 - **Excluded:** bundle performance (performance audit); backend behaviour behind an endpoint.
 
 ## Bar
@@ -75,6 +76,7 @@ translation, inaccessible control, console error), or the same screen built twic
 | --- | --- |
 | Vue | `vue-tsc --noEmit`; named routes only; `views/partials/`; Pinia stores holding one view's state |
 | Next.js | `tsc --noEmit`; `'use client'` on layouts or pages; server modules missing `server-only`; ORM objects or secrets in client props; `NEXT_PUBLIC_` values that are secret; missing `error.tsx`, `loading.tsx`, `not-found.tsx` per surface; hydration warnings |
+| React | `tsc --noEmit`; `eslint-plugin-react-hooks` disabled anywhere; `useEffect` fetching data or deriving state; pages outside `pages/`, or `pages/partials/`; index keys; server data held in a client store |
 | Server templates | Blade, Razor, Twig: literal strings and raw-HTML sinks (`{!! !!}`, `@Html.Raw`, `|raw`) |
 
 ## Output
