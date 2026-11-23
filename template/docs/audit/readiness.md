@@ -3,9 +3,9 @@
 Living record of the project's progress against the gates in
 [`lifecycle.md`](../conventions/lifecycle.md), kept current: when a criterion closes, its row
 changes rather than a note being appended. The criteria themselves are defined there; this page
-only tracks them. Paths are relative to the repository root.
+only tracks them. Paths are relative to the project root.
 
-**Opened:** <!-- bootstrap: YYYY-MM-DD, at commit `<sha>` -->
+**Opened:** <!-- bootstrap: YYYY-MM-DD, and the commit when the project is under version control -->
 **Last verified:** <!-- the phase-gate report that last checked every row -->
 
 ## What "met" means here
@@ -33,14 +33,14 @@ Status — ✅ Met · ⚠️ Waived (reason on row) · ❌ Not met.
 
 | ID | Criterion | Status | Evidence / blocking reason |
 | --- | --- | --- | --- |
-| G0.1 | Kit copied; `bootstrap:` markers filled | ❌ Not met | — |
+| G0.1 | Rules installed; placeholders filled; agents configured | ❌ Not met | — |
 | G0.2 | ADR-0001: stack per app; Stacks table filled; unused profiles removed | ❌ Not met | — |
 | G0.3 | ADR-0002: shape, modules, modularity level | ❌ Not met | — |
 | G0.4 | Context page: people, external systems, capabilities | ❌ Not met | — |
 | G0.5 | Glossary | ❌ Not met | — |
-| G0.6 | Repository hygiene | ❌ Not met | — |
+| G0.6 | Project hygiene | ❌ Not met | — |
 | G0.7 | One-command local boot, documented | ❌ Not met | — |
-| G0.8 | CI: lint, format, types, test, build per app | ❌ Not met | — |
+| G0.8 | CI: lint, format, types, test, build per app, and `.ai/bin/check` | ❌ Not met | — |
 | G0.9 | Pull-request templates point at conventions and specs | ❌ Not met | — |
 
 ### G1 — Foundation

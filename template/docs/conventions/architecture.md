@@ -9,7 +9,7 @@ realises these rules; it never relaxes one.
 
 ## Concepts
 
-The rules are written in the kit's vocabulary. Each profile opens with the table mapping these
+The rules are written in one vocabulary. Each profile opens with the table mapping these
 names to its framework.
 
 | Concept | What it is |

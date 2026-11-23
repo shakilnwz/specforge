@@ -12,7 +12,8 @@ documents this audit owns: it files a report and updates the rows of
 the report.
 **Output:** `docs/reports/YYYY-MM-DD-gate-G<N>.md` from
 [`report.md`](../../../docs/templates/report.md), and updated rows in `docs/audit/readiness.md`.
-**Inputs:** the gate to check (default: the gate closing the phase `AGENTS.md` names).
+**Inputs:** the gate to check (default: the gate closing the phase `AGENTS.md` names), or `all` —
+at adoption, every gate, to find the highest one whose criteria all hold.
 
 ## Before you start
 

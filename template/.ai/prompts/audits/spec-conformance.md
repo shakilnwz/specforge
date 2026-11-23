@@ -53,8 +53,11 @@ Excluded from every verdict: implementation choices the spec rightly leaves to t
 2. **Reverse — code to requirement.** Enumerate every observable behaviour: every entry point
    (routes, server actions, endpoints, commands, consumers), every scheduled job, every setting and
    feature flag a user or operator can change, every option a form offers, every notification sent.
-   Map each to a requirement. An unmapped one is **Overreach** — or a capability that predates the
-   specs, recorded as such for the owner to specify or remove.
+   Map each to a requirement. An unmapped one is **Overreach**, unless it is a row of
+   `docs/audit/legacy-capabilities.md` — behaviour that predates the rules (`specs.md` → *Legacy
+   behaviour*). **Register mode**, run once at adoption: every unmapped behaviour becomes a row of
+   that register — capability, entry points, tests covering it today, status `Unspecified` — instead
+   of a finding.
 3. **Contracts.** Diff `contracts/` against the implemented API — paths, methods, fields, types,
    status codes, error shapes — and against the generated client types.
 4. **Non-functional requirements.** For each, find its measurement (test, tool, check) and whether
@@ -98,7 +101,7 @@ Excluded from every verdict: implementation choices the spec rightly leaves to t
   `C` contract.
 - A **Traceability matrix** per spec: requirement · verdict · tests · entry point.
 - An **Unspecified behaviour** table from the reverse sweep: behaviour · location · proposed action
-  (specify, or remove).
+  (specify, or remove). In register mode, the legacy register instead.
 
 ## Done when
 

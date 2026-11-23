@@ -3,13 +3,13 @@ No need to lint and test unless asked. Say so in the hand-off when a change was 
 Talk to me in advanced and sophisticated language of the software engineering domain or industry.
 
 <!--
-  Bootstrap: every "bootstrap:" marker below is filled when this kit is copied into a
+  Bootstrap: every "bootstrap:" marker below is filled when these rules are installed into a
   project, and the marker removed. Until then the section is a placeholder, not a fact.
 -->
 
 ## Phase
 
-**Phase 0 — Bootstrap.** <!-- bootstrap: advance this line at each gate -->
+**Phase 0 — Bootstrap.** <!-- owner: advance this line when a gate closes -->
 The phases, their gates and what each gate requires are in
 [`docs/conventions/lifecycle.md`](docs/conventions/lifecycle.md); progress against them is tracked
 in [`docs/audit/readiness.md`](docs/audit/readiness.md). Work that belongs to a later phase is not
@@ -23,6 +23,20 @@ relaxes a core rule; where the two seem to disagree, the core wins and the profi
 | App / path | Stack | Profiles |
 | --- | --- | --- |
 | <!-- bootstrap: `<path>` --> | <!-- bootstrap: Laravel · .NET · Next.js, with versions --> | <!-- bootstrap: [`stack-<name>.md`](docs/conventions/stack-<name>.md), one per stack the app uses --> |
+
+## Rules for every agent
+
+This file is the one every coding agent reads. The path-scoped rules live once, in `.ai/rules/`;
+for each agent listed in `.ai/agents`, `.ai/bin/sync-rules` generates that agent's native copies
+(the `ai-*` files under `.claude/rules/`, `.cursor/rules/`, `.github/instructions/`,
+`.windsurf/rules/`, `.agents/rules/`, `.kiro/steering/`). An agent that loads none of them follows
+the index by hand — **Before writing anything**, step 2. Never edit a generated copy: edit
+`.ai/rules/`, then run `.ai/bin/sync-rules`.
+
+Instructions guide an agent; they do not stop one. What enforces the rules, whoever wrote the
+change, is CI: `.ai/bin/check` (generated copies in sync, placeholders gone after Phase 0, every
+Implemented requirement cited by a test) beside the stack's own lint, type check, tests and arch
+tests.
 
 ## Spec-driven development
 
@@ -39,7 +53,8 @@ When two sources disagree, the higher one wins and the lower one is a defect to 
 1. The user's explicit instruction in the current session.
 2. `docs/conventions/*` — normative. A change that breaks a rule there is wrong even if it works.
 3. `.ai/rules/*` — path-scoped rules, decisions and traps. They bind the paths in their `paths:`
-   frontmatter and never contradict a convention; a rule that does is stale.
+   frontmatter and never contradict a convention; a rule that does is stale. The per-agent copies
+   generated from them are not a source.
 4. Accepted ADRs in `docs/adr/` — for the decision they record; Approved specs in `docs/specs/`
    and their `features/` scenarios — for the behaviour they require. A spec that needs a convention
    broken is a defect in the spec until an ADR changes the convention.
@@ -68,8 +83,9 @@ the same change, or report it.
    updates its row in the same change.
 
 Record a durable rule — a settled decision, a non-obvious trap, a standing constraint — in
-`.ai/rules/` (Boost's `record-rule` tool where it is installed), never in a personal or
-session-scoped memory: only the repository is shared with the next agent and the team.
+`.ai/rules/` (Boost's `record-rule` tool where it is installed), then run `.ai/bin/sync-rules`;
+never in a personal or session-scoped memory, nor in one agent's own rules directory: only
+`.ai/rules/` reaches every agent and the team.
 
 ## Rules (CRITICAL)
 
@@ -83,7 +99,7 @@ session-scoped memory: only the repository is shared with the next agent and the
 | [`testing.md`](docs/conventions/testing.md) | What gets a test, which kind, how conventions are enforced mechanically |
 | [`documentation.md`](docs/conventions/documentation.md) | Where every document goes, its template, its lifecycle |
 | [`auditing.md`](docs/conventions/auditing.md) | How an audit is scoped, run, verified and written |
-| [`lifecycle.md`](docs/conventions/lifecycle.md) | The phases from blank repository to release, and the gate closing each |
+| [`lifecycle.md`](docs/conventions/lifecycle.md) | The phases from installing these rules — in a new or an existing project — to release, and the gate closing each |
 
 Stack profiles realise the core conventions per stack; the **Stacks** table binds them to apps:
 
@@ -127,9 +143,8 @@ database write, no dependency change. Run one from its prompt in
 - **features/**: executable acceptance scenarios, tagged with requirement IDs, when a Gherkin
   runner is used
 - **.ai/**: material addressed to AI agents rather than people — `rules/` (path-scoped, indexed by
-  `rules/index.md`) and `prompts/` (runnable tasks, the audits among them). Laravel Boost reads
-  `.ai/{guidelines,skills,rules}`; `.claude/rules` links to `.ai/rules` so Claude Code loads the
-  same files by path
+  `rules/index.md`), `prompts/` (runnable tasks, the audits among them), `agents` (the agents in
+  use) and `bin/` (`sync-rules`, `check`). Laravel Boost reads `.ai/{guidelines,skills,rules}`
 
 ## Common Commands
 

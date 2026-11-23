@@ -137,6 +137,24 @@ A bug is behaviour that contradicts a requirement: fix the code and add a regres
 with that requirement. Behaviour no requirement covers is not a bug yet — it is a gap: add the
 requirement to the spec (a Draft amendment the owner approves), then fix it.
 
+## Legacy behaviour
+
+In a project that had code before these rules, the behaviour that predates them is registered,
+not condemned. The adoption's spec-conformance sweep lists every existing capability as a row of
+`docs/audit/legacy-capabilities.md`.
+
+- A registered capability is neither overreach nor a bug: it is behaviour with no spec yet.
+- **Spec on touch.** Before a legacy capability's behaviour changes, it gets a spec. Its
+  requirements first state what the capability does today — read from the code and pinned by
+  tests — and the change then amends them through the normal flow. A change that alters no
+  behaviour (a refactor, a fix that restores intended behaviour the owner confirms) needs no spec.
+- **Characterization first.** Before untested legacy code is changed, tests pin its current
+  observable behaviour, tagged with the new spec's requirement IDs where they prove one. A
+  characterization test that pins behaviour the change alters is updated in the same change, never
+  deleted silently.
+- The register's row closes, naming the spec, when that spec reaches Implemented. Capabilities the
+  owner retires leave the register with their removal.
+
 ## Executable scenarios
 
 When an app runs a Gherkin runner (Behat, Reqnroll, playwright-bdd), its acceptance scenarios live

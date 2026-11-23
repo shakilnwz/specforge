@@ -58,7 +58,7 @@ suite slow and the failure vague.
 
 A rule in `docs/conventions/` that a machine can check is checked — by an arch test, an analyzer, a
 lint rule or a formatter rule. The check lands in the same change as the rule, or the rule records
-why it cannot be checked. Candidates the kit expects from the first module onward:
+why it cannot be checked. Candidates expected from the first module onward:
 
 - entry points sit inside a declared surface and set nothing their surface sets
 - entry points return only allowed response types, and do not reach persistence where the flow
@@ -68,6 +68,31 @@ why it cannot be checked. Candidates the kit expects from the first module onwar
 - Commands are immutable and reach no ambient state
 - no raw environment access outside configuration; no debug output left in code
 - naming suffixes and prefixes per the profile
+
+Beside the stack's checks, CI runs `.ai/bin/check`: the agents' generated rule files in sync with
+`.ai/rules/`, no placeholder left after Phase 0, and every requirement of an Implemented spec cited
+by a test. It is what holds the rules whichever agent, or person, wrote the change.
+
+## Baselines
+
+In a project adopted with existing code, a check the existing code fails is still switched on — with
+a baseline that records the violations present on the day, so CI fails every new violation and none
+of the old ones.
+
+- **A baseline only shrinks.** An entry leaves when its violation is fixed, in the fixing change;
+  none is added, except by regenerating the baseline with the owner's approval recorded in the
+  change, which is a finding in itself.
+- Every baseline is listed, with its size, in the architecture-conformance living audit, so its
+  trend is visible at every gate.
+- A project started under these rules has no baselines.
+
+| Check | Baseline mechanism |
+| --- | --- |
+| PHPStan / Larastan | `phpstan-baseline.neon` from `--generate-baseline` |
+| deptrac | `deptrac.baseline.yaml` from the baseline formatter |
+| ESLint | bulk suppressions (`eslint-suppressions.json`, `--suppress-all`, `--prune-suppressions`) |
+| .NET analyzers | `GlobalSuppressions.cs` entries scoped to the existing members |
+| Arch tests (Pest `arch()`, NetArchTest, dependency-cruiser) | an explicit allow-list of the existing violators inside the test |
 
 ## Writing tests
 

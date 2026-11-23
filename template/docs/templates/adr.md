@@ -1,6 +1,6 @@
 # ADR-NNNN: <short decision title>
 
-- **Status:** Proposed <!-- Proposed | Accepted | Superseded by ADR-NNNN | Deprecated -->
+- **Status:** Proposed <!-- Proposed | Accepted | Accepted (retroactive, YYYY-MM-DD) — records a decision the code already embodied when the rules were adopted | Superseded by ADR-NNNN | Deprecated -->
 - **Date:** YYYY-MM-DD
 - **Deciders:** <who made the call>
 - **Supersedes:** <ADR-NNNN, or "none">

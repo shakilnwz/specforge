@@ -32,7 +32,9 @@ more than one goes in the root. A directory exists only when it has content.
 | `reports/` | Point-in-time snapshots, never edited after | Evidence | `YYYY-MM-DD-<topic>.md` | `report.md` |
 | `features/` | Executable acceptance scenarios, when a Gherkin runner is used | Normative | `NNNN-<capability>.feature`, `flows/<journey>.feature` | `feature.feature` |
 | `.ai/prompts/` | Runnable tasks addressed to agents | Instruction | `<task>.md` | `audit-prompt.md` for audits |
-| `.ai/rules/` | Path-scoped rules, decisions and traps | Normative for its paths | `<area>.md` | Boost's `record-rule`, or by hand |
+| `.ai/rules/` | Path-scoped rules, decisions and traps — the one source every agent's copy is generated from | Normative for its paths | `<area>.md` | Boost's `record-rule`, or by hand |
+| `.ai/agents`, `.ai/bin/` | The agents in use; the `sync-rules` and `check` scripts | Tooling | — | — |
+| `.claude/rules/`, `.cursor/rules/`, `.github/instructions/`, `.windsurf/rules/`, `.agents/rules/`, `.kiro/steering/` | Each agent's native copy of `.ai/rules/`, for the agents in `.ai/agents` | Generated — never edited | `ai-<area>.*` | Written by `.ai/bin/sync-rules` |
 
 `docs/templates/` holds one template per document type and is the only place templates live. Start
 every document from its template; a section the template has and the document does not need is
@@ -90,8 +92,10 @@ its spec has introduced overreach; the spec-conformance audit finds that.
 
 ## Exceptions
 
-- A third-party convention file a tool generates (`CLAUDE.md`'s Boost block, `.ai/rules/boost/`,
-  `.ai/rules/index.md`) keeps the tool's format; edit the source the tool reads, not its output.
+- A file a tool generates (`CLAUDE.md`'s Boost block, `.ai/rules/boost/`, `.ai/rules/index.md`, the
+  agents' `ai-*` rule files) keeps the tool's format; edit the source the tool reads, not its output.
+- An agent's rule file the project wrote itself, outside the `ai-*` names, is the project's own and
+  is never generated over; a rule meant for every agent moves into `.ai/rules/`.
 
 ---
 

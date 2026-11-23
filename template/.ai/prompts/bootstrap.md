@@ -1,24 +1,28 @@
 # Bootstrap a Project
 
-Take a repository that has just received this kit to the close of gate G0 in
-[`lifecycle.md`](../../docs/conventions/lifecycle.md): every decision the rest of the project rests
-on written down, each app bound to its stack profile, the capabilities in scope listed for
-specification, every placeholder filled, nothing built yet.
+Take a project that has just received these rules, and has no application code yet, to the close of
+gate G0 in [`lifecycle.md`](../../docs/conventions/lifecycle.md): every decision the rest of the
+project rests on written down, each app bound to its stack profile, the agents in use configured,
+the capabilities in scope listed for specification, every placeholder filled. A project that already
+has code is taken through [`adopt.md`](adopt.md) instead.
 
-**Mode:** Writes documents and repository hygiene files only. No application code, no framework
-install, no dependency, until the owner approves the stack ADR — then only what G0 requires.
-**Output:** filled `AGENTS.md` and `README.md`; `docs/adr/0001-*.md`, `docs/adr/0002-*.md`; a context page in
-`docs/architecture/`; `docs/reference/glossary.md`; hygiene files; the kit trimmed to the stacks in
-use; updated G0 rows in `docs/audit/readiness.md`; a G0 gate report.
+**Mode:** Writes the rules' documents only — ADRs, the context page, the glossary, `AGENTS.md`,
+`.ai/agents` — and runs `.ai/bin/sync-rules`. It creates no application code and no project
+infrastructure (ignore files, environment files, CI workflows, a README): where a G0 criterion needs
+one, it reports what is missing and writes it only if the owner asks.
+**Output:** filled `AGENTS.md`; `docs/adr/0001-*.md`, `docs/adr/0002-*.md`; a context page in
+`docs/architecture/`; `docs/reference/glossary.md`; `.ai/agents` and the generated agent rule files;
+the rules trimmed to the stacks in use; updated G0 rows in `docs/audit/readiness.md`; a G0 gate
+report.
 **Inputs:** the owner, who answers the questions below. Never invent an answer the owner did not
 give; a placeholder left open is better than a fabricated fact.
 
 ## Before you start
 
-1. Confirm the kit is present: `AGENTS.md`, `CLAUDE.md`, `README.md`, `.ai/rules/`, `.ai/prompts/`,
-   `docs/conventions/` (core conventions and `stack-*.md` profiles), `docs/templates/`,
-   `docs/audit/readiness.md`, `.claude/rules` linking to `.ai/rules`.
-2. List every `bootstrap:` marker: `grep -rn 'bootstrap:' AGENTS.md README.md docs .ai .github`.
+1. Confirm the rules are present: `AGENTS.md`, `CLAUDE.md`, `.ai/rules/`, `.ai/prompts/`,
+   `.ai/agents`, `.ai/bin/`, `docs/conventions/` (core conventions and `stack-*.md` profiles),
+   `docs/templates/`, `docs/audit/readiness.md`.
+2. List every placeholder: `grep -rn '<!-- bootstrap:' AGENTS.md docs .ai .github`.
 3. Read `lifecycle.md` → G0, [`documentation.md`](../../docs/conventions/documentation.md) and
    [`specs.md`](../../docs/conventions/specs.md).
 
@@ -35,7 +39,7 @@ Ask in one round, grouped, with a recommended default for each where one exists:
 4. **External systems:** payment, mail, storage, DNS, identity, search — each with its provider if
    chosen.
 5. **Stack, per app:** Laravel, .NET or Next.js for the server; Vue or Next.js for the frontend; the
-   major versions; database; cache and queue; hosting. The kit ships profiles for
+   major versions; database; cache and queue; hosting. The rules ship profiles for
    [Laravel](../../docs/conventions/stack-laravel.md), [.NET](../../docs/conventions/stack-dotnet.md),
    [Next.js](../../docs/conventions/stack-nextjs.md) and [Vue](../../docs/conventions/stack-vue.md).
    For Next.js, also: full-stack, or a frontend over another app's API.
@@ -44,7 +48,9 @@ Ask in one round, grouped, with a recommended default for each where one exists:
    kernel and the modularity level (1 code, 2 data, 3 service) from
    [`architecture.md`](../../docs/conventions/architecture.md) → *Modules*. Default: Level 1 unless a
    reason for more is given.
-7. **Constraints:** compliance, data residency, accessibility and performance targets, deadlines,
+7. **Agents:** which coding agents will work in the project — Claude Code, Codex, Cursor, Copilot,
+   Windsurf, Antigravity, Gemini CLI, Kiro.
+8. **Constraints:** compliance, data residency, accessibility and performance targets, deadlines,
    team size.
 
 ## Steps
@@ -60,31 +66,33 @@ Ask in one round, grouped, with a recommended default for each where one exists:
    row per concept — the term, its one-line meaning, and the names it must not be called.
 4. Fill `AGENTS.md`: the **Stacks** table (each app, its path, its profiles); **Architecture
    Overview** from the ADRs; **Common Commands**, **Local Endpoints** and **Database** once the
-   environment exists (otherwise leave the marker and say so). Fill `README.md` from the same
-   sources: the product, the apps and their stacks, and the local boot command.
-5. **Trim the kit to the stacks in use**, once the owner approves ADR-0001: list the profiles, the
+   environment exists (otherwise leave the placeholder and say so).
+5. **Trim the rules to the stacks in use**, once the owner approves ADR-0001: list the profiles, the
    `.ai/rules/` stack files and the PR-template lines no app uses, and remove them with the owner's
    approval. Never remove a core convention.
 6. Adjust the `paths:` globs in `.ai/rules/*.md` to the real layout — app directories in a monorepo,
-   module directories when modular — and regenerate `.ai/rules/index.md` to match (Boost's format:
-   one row per rule file, sorted by file path, globs joined by `, `).
-7. Fill the surface-declaration table in `architecture.md` from ADR-0002, leaving the mechanism
+   module directories when modular — keeping the frontmatter in the form Laravel Boost writes back.
+7. **Configure the agents:** uncomment each agent the owner named in `.ai/agents`, then run
+   `.ai/bin/sync-rules`. It generates every agent's rule files and regenerates
+   `.ai/rules/index.md`; a `conflict:` line names a file it will not overwrite.
+8. Fill the surface-declaration table in `architecture.md` from ADR-0002, leaving the mechanism
    column to the profile.
-8. Repository hygiene for G0.6: ignore files per stack, `.editorconfig`, example environment files
-   with no real values. Check history for secrets (`git log -p -S` for key-like prefixes) and report
-   any found.
-9. CI for G0.8: one job per app running its profile's lint, format check, type check, test and build
-   commands — proposed for the owner's approval, as it adds files under `.github/`.
-10. Pull-request templates (G0.9) are in `.github/PULL_REQUEST_TEMPLATE/`; fill their placeholders
-    for the project's apps.
-11. Update the G0 rows of `docs/audit/readiness.md` you can evidence; set **Opened** to today and the
-    commit.
+9. **Check, do not create, what G0 asks of the project:** ignore files and `.editorconfig` (G0.6),
+   example environment files with no real values, secrets in history where the project is under
+   version control, a one-command local boot (G0.7), CI running each app's lint, format check, type
+   check, test and build plus `.ai/bin/check` (G0.8). Report each gap with the smallest change that
+   closes it; write it only if the owner asks.
+10. Pull-request templates (G0.9) are installed in `.github/PULL_REQUEST_TEMPLATE/`. If the project
+    is hosted elsewhere, port their checklists to the host's templates.
+11. Run `.ai/bin/check`, then update the G0 rows of `docs/audit/readiness.md` you can evidence and
+    set **Opened** to today.
 12. Run the [`phase-gate`](audits/phase-gate.md) audit for G0 and file its report.
 
 ## Done when
 
-- Every `bootstrap:` marker is filled, or listed in the hand-off with the question it waits on.
+- Every placeholder is filled, or listed in the hand-off with the question it waits on.
 - The ADRs are written and awaiting the owner's acceptance.
+- Every agent the owner named has its rule files generated, and `.ai/bin/check` passes.
 - Every capability in scope is on the context page; the first one is ready to be specified at G1.
 - The G0 gate report says plainly whether G0 can close.
 - `AGENTS.md`'s **Phase** line is unchanged — advancing it is the owner's decision.

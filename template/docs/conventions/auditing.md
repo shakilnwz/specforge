@@ -144,6 +144,8 @@ Start from [`report.md`](../templates/report.md) or [`audit.md`](../templates/au
 
 Audits run at the gates in [`lifecycle.md`](lifecycle.md), and additionally:
 
+- at adoption into an existing project: the baseline audits in [`lifecycle.md`](lifecycle.md) →
+  *Adopting an existing project*;
 - when a spec moves to Implemented: spec conformance, scoped to that spec;
 - before every release, the [`phase-gate`](../../.ai/prompts/audits/phase-gate.md) audit;
 - after a refactor touching more than one module: architecture conformance, modularity and

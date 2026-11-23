@@ -1,6 +1,7 @@
 # Lifecycle Conventions
 
-The path from a blank repository to a released product: five phases, each closed by a gate. A gate
+The path from the day these rules are installed — in a project with no code yet, or one long in
+production — to a released product: five phases, each closed by a gate. A gate
 is a list of checkable criteria with stable IDs; [`docs/audit/readiness.md`](../audit/readiness.md)
 tracks them, and the [`phase-gate`](../../.ai/prompts/audits/phase-gate.md) audit verifies them.
 Normative: a phase is not over because the calendar says so, only because its gate closed.
@@ -39,20 +40,42 @@ flowchart LR
     A -.-> M
 ```
 
+## Adopting an existing project
+
+Rules installed into a project that already has code go through
+[`adopt.md`](../../.ai/prompts/adopt.md) instead of bootstrap. The gates and their criteria are the
+same; what differs is how the project enters them.
+
+- **Decisions are recorded, not made.** ADR-0001 and ADR-0002 record the stacks and the shape the
+  code already has, as retroactive decisions. A decision the owner wants changed is a new ADR.
+- **The phase is assessed, not assumed.** Baseline audits run at adoption — architecture
+  conformance, modularity when modular, security, test coverage, dependencies, and spec
+  conformance in register mode — and the phase-gate audit checks every gate against what exists.
+  The owner sets the **Phase** line from its report. A criterion the project does not meet stays
+  not met; nothing is waived by default.
+- **Existing behaviour is registered.** Every capability found is a row of
+  `docs/audit/legacy-capabilities.md`: not overreach, but not yet specified. It gets a spec before
+  its behaviour changes ([`specs.md`](specs.md) → *Legacy behaviour*), and G2.1 counts the legacy
+  capabilities in scope like any other.
+- **Existing violations are baselined.** A check the existing code fails is switched on with a
+  baseline that only shrinks ([`testing.md`](testing.md) → *Baselines*); baseline-audit findings land
+  in the living audits like any others.
+
 ## Phase 0 — Bootstrap
 
-The kit is in place and the decisions everything else rests on are written down. Nothing is built.
+The rules are in place and the decisions everything else rests on are written down. Nothing is
+built yet — a project that already has code enters through adoption instead.
 
 | ID | Criterion |
 | --- | --- |
-| G0.1 | This kit is copied in; every `bootstrap:` marker (`grep -rn 'bootstrap:'`) is filled or removed |
+| G0.1 | The rules are installed; every `<!-- bootstrap: … -->` placeholder is filled or removed; the agents that work in the project are listed in `.ai/agents` and their rule files generated |
 | G0.2 | ADR-0001 records each app's stack and major versions, with the alternatives considered; `AGENTS.md`'s **Stacks** table assigns each app its profiles, and unused profiles and their rule files are removed |
 | G0.3 | ADR-0002 records the top-level shape — single app or monorepo, the apps and their surfaces — and, when modular, the modules and the modularity level |
 | G0.4 | `docs/architecture/` has a context page: the people who use the product, every external system, and the capabilities in scope, one line each — each becomes a spec |
 | G0.5 | `docs/reference/glossary.md` holds the domain's terms, one name per concept |
-| G0.6 | Repository hygiene: ignore files, `.editorconfig`, example environment files; no secret in history; the default branch is protected |
+| G0.6 | Project hygiene: ignore files, `.editorconfig`, example environment files with no real values; under version control, no secret in history and the default branch protected |
 | G0.7 | The local environment boots with one documented command, recorded under **Common Commands** in `AGENTS.md` |
-| G0.8 | CI runs lint, format check, type check, test and build for every app on every pull request, even while the suites are empty |
+| G0.8 | CI runs lint, format check, type check, test and build for every app, and `.ai/bin/check`, on every change, even while the suites are empty |
 | G0.9 | Pull-request templates are in place and their checklists point at the conventions and the specs |
 
 ## Phase 1 — Foundation

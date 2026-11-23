@@ -23,6 +23,12 @@ endpoint, mode or setting, however useful it looks. A discovery that changes beh
 into the spec, not into the code. Work with no behaviour change — a refactor, an upgrade — needs no
 spec, and changes no test's expectations.
 
+## Rules are written once, in `.ai/rules/`
+The `ai-*` files under an agent's own directory (`.claude/rules/`, `.cursor/rules/`,
+`.github/instructions/`, `.windsurf/rules/`, `.agents/rules/`, `.kiro/steering/`) are generated.
+Edit the source in `.ai/rules/`, then run `.ai/bin/sync-rules`; an edit to a generated file is
+lost, and `.ai/bin/check` fails CI until it is.
+
 ## Approval before structure or dependencies
 Do not add, remove or upgrade a dependency, create a new top-level directory, add a module, or
 change a convention without the owner's approval in the session. Propose it with the reason.

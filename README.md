@@ -1,134 +1,207 @@
-# Software Factory Kit
+# SpecForge
 
-A bootstrap kit that takes a product from an empty repository to a release under one coherent
-governance model: the conventions people and AI agents follow when specifying and writing code, the
-protocol and prompts for auditing that code, and the documents both produce. It is **spec-driven**
-— behaviour is specified, approved and traced to tests before and while it is built — and
-**stack-aware**: one set of stack-neutral core conventions, realised per stack by profiles for
-**Laravel**, **ASP.NET Core**, **Next.js** and **Vue**, mixed freely across the apps of a monorepo.
+A ruleset for building software with AI coding agents, and the means to add it to a project — one
+with no code yet, or one long in production. It brings:
 
-> **Status.** The payload in [`template/`](template/) is complete. The interactive scaffolder is
-> planned, not built (see [Roadmap](#roadmap-the-interactive-scaffolder)); today a project is created
-> by copying `template/` and running the bootstrap prompt with an AI agent.
+- **Coding rules:** stack-neutral core conventions, realised per stack by profiles for **Laravel**,
+  **ASP.NET Core**, **Next.js** and **Vue**.
+- **Spec rules:** spec-driven development, where behaviour is specified, approved and traced to
+  tests.
+- **Audit rules:** eighteen read-only audits under one protocol.
+- **Document rules:** where every decision, finding and plan is written.
 
-## Quick start
+The rules reach **every coding agent** — Claude Code, Codex, Cursor, Copilot, Windsurf,
+Antigravity, Gemini CLI and Kiro — from one source, and are enforced by a check that runs in CI
+whoever wrote the change.
 
-### 1. Copy the payload into a new repository
+It is not a project scaffolder or a repository template. It creates no project, no application
+code and no project infrastructure, and it needs no version control.
 
-Only `template/` is copied; this README, and everything else at the root, stays with the kit.
+> **Status.** The ruleset in [`template/`](template/) is complete, and installs by hand today. The
+> installer is planned, not built (see [Roadmap](#roadmap-the-installer)).
 
-From a local checkout of the kit:
+## Install
+
+### 1. Add the rules to your project
+
+Only `template/` is installed. This README and everything else at the root stay with the kit. The
+same commands serve a new project and an existing one, because nothing that is already there is
+overwritten:
 
 ```bash
-mkdir my-product && cd my-product && git init
-cp -R ~/path/to/softfactory/template/. .
+KIT=~/path/to/specforge/template        # a local checkout of the kit
+PROJECT=~/code/my-app                   # the project, new or existing
+
+cd "$KIT" && find . -type f | while IFS= read -r f; do
+  if [ -e "$PROJECT/$f" ]; then
+    printf 'kept yours: %s\n' "$f"
+  else
+    mkdir -p "$PROJECT/$(dirname "$f")" && cp -p "$f" "$PROJECT/$f"
+  fi
+done
 ```
 
-Without cloning the kit — one release tarball, no history — once the repository is published:
+Without a checkout — one release tarball, no history — once the kit is published:
 
 ```bash
-mkdir my-product && cd my-product && git init
 tmp="$(mktemp -d)"
 curl -fsSL https://github.com/<org>/<repo>/archive/refs/tags/<tag>.tar.gz \
   | tar -xz -C "$tmp" --strip-components=1
-cp -R "$tmp/template/." .
-rm -rf "$tmp"
+KIT="$tmp/template"      # then run the loop above, and: rm -rf "$tmp"
 ```
 
-`cp -R` copies the dotfile directories (`.ai/`, `.claude/`, `.github/`) and keeps the
-`.claude/rules → ../.ai/rules` symlink a symlink, with both GNU and BSD `cp`.
+Every `kept yours:` line is a file your project already had. The agent reconciles each one during
+adoption; nothing is merged silently.
 
-### 2. Bootstrap with an agent
+### 2. Choose your agents
 
-Open the new repository in Claude Code — or any agent that reads `AGENTS.md` — and say:
+Uncomment the agents that work in the project in `.ai/agents`, then generate their rule files:
 
-> *Run the bootstrap prompt.*
+```bash
+.ai/bin/sync-rules
+```
 
-The agent follows [`.ai/prompts/bootstrap.md`](template/.ai/prompts/bootstrap.md). It asks you, in
-one round:
+### 3. Hand over to an agent
 
-- the product, and its capabilities in scope;
-- the domain vocabulary;
-- the external systems;
+Open the project in any of those agents and say one of these:
+
+| The project… | Say | The agent follows |
+| --- | --- | --- |
+| has no code yet | *Run the bootstrap prompt.* | [`bootstrap.md`](template/.ai/prompts/bootstrap.md) |
+| already has code | *Run the adopt prompt.* | [`adopt.md`](template/.ai/prompts/adopt.md) |
+
+**Bootstrap** asks you, in one round, for:
+- the product, its capabilities and its vocabulary;
 - the stack of each app;
 - the shape of the system: apps, surfaces, modules and modularity level;
-- your constraints.
+- which agents you use, and your constraints.
 
-It then:
+It then writes ADR-0001 and ADR-0002 as Proposed, the context page and the glossary seed, and fills
+`AGENTS.md`. It *reports* — never creates — the project infrastructure G0 expects.
 
-- writes ADR-0001 (stacks) and ADR-0002 (shape) as Proposed;
-- writes the context page and the glossary seed;
-- fills `AGENTS.md` and the project's `README.md`;
-- proposes removing the stack profiles no app uses;
-- runs the G0 phase-gate audit.
+**Adopt** reads the code first and asks only what the code cannot settle. It then:
+- records the existing stacks and shape as retroactive ADRs;
+- lists every existing capability on a **legacy register**;
+- runs baseline audits;
+- measures existing violations for **baselines that only shrink**;
+- assesses every gate to name the phase the evidence supports.
 
-### 3. Take the owner's decisions
+Both end with a phase-gate report.
 
-Accept or amend the ADRs, approve the trimming, and when the gate report says G0 can close,
-advance `AGENTS.md`'s **Phase** line. For a Laravel app using Laravel Boost, run
-`php artisan boost:install`: Boost appends its block to `CLAUDE.md` and `AGENTS.md`, keeps
-`.ai/rules/index.md` in the format already there, and owns `.ai/rules/boost/`. Never hand-write a
-rule there; it is deleted on every sync.
+### 4. Take the owner's decisions, and switch on enforcement
+
+- Accept or amend the ADRs, and set `AGENTS.md`'s **Phase** line from the gate report.
+- Add `.ai/bin/check` to CI beside each app's lint, type check, tests and arch tests.
+- For a Laravel app with Laravel Boost, run `php artisan boost:install`. Boost keeps
+  `.ai/rules/index.md` in the format `sync-rules` writes, and owns `.ai/rules/boost/`.
+
+## How the rules reach every agent
+
+Agents disagree on where path-scoped rules live and how a rule declares its files, and some silently
+drop a rule they cannot parse. So the rules are written once and delivered three ways:
+
+1. **`AGENTS.md`, read by every agent.** It carries the authority order and the read-before-write
+   protocol, including *"open `.ai/rules/index.md` and read every rule whose globs cover the paths
+   you touch"*. An agent with no rules mechanism of its own still follows the rules this way.
+2. **Native copies, generated.** `.ai/rules/*.md` is the one source. For each agent in `.ai/agents`,
+   `.ai/bin/sync-rules` writes that agent's own format, so the agent loads the right rule
+   automatically when it touches a matching file:
+
+   | Agent | Generated | Scoped by |
+   | --- | --- | --- |
+   | Claude Code | `.claude/rules/ai-*.md` (`CLAUDE.md` imports `AGENTS.md`) | `paths:` |
+   | Cursor | `.cursor/rules/ai-*.mdc` | `globs:` / `alwaysApply:` |
+   | GitHub Copilot | `.github/instructions/ai-*.instructions.md` | `applyTo:` |
+   | Windsurf / Devin | `.windsurf/rules/ai-*.md` | `trigger: glob` / `globs:` |
+   | Google Antigravity | `.agents/rules/ai-*.md` | `trigger: glob` / `globs:` |
+   | Kiro | `.kiro/steering/ai-*.md` | `inclusion: fileMatch` / `fileMatchPattern:` |
+   | Gemini CLI | `.gemini/settings.json`, if absent, pointing it at `AGENTS.md` | — |
+   | Codex | nothing: it reads `AGENTS.md` | — |
+
+   Each generated file carries a marker line. Files without that marker — your team's own rules
+   beside them — are never overwritten or removed. Removing an agent from `.ai/agents` removes its
+   generated files. `sync-rules` also writes `.ai/rules/index.md` byte for byte as Laravel Boost
+   does, and reports any rule whose frontmatter Boost would rewrite.
+3. **Enforcement that ignores who wrote the change.** Instructions guide an agent; they do not stop
+   one. `.ai/bin/check` runs in CI and fails when:
+   - a generated file has drifted from `.ai/rules/`;
+   - a placeholder is left after Phase 0;
+   - a requirement of an Implemented spec is cited by no test;
+   - `AGENTS.md` outgrows Codex's 32 KiB, or an Antigravity rule its 24,000 bytes.
+
+   The stack's own gates — lint, type check, tests, arch tests — run beside it.
+
+Both scripts are Bash 3.2 with POSIX tools: no git, no network, no runtime of any stack.
 
 ## Using it day to day
 
-Everything is driven by asking the agent in plain language; the prompts, conventions and rule
-files tell it what to read, what to write and when to stop.
+Everything is driven by asking the agent in plain language. The prompts, conventions and rule files
+tell it what to read, what to write and when to stop.
 
 | You say | The agent | You get |
 | --- | --- | --- |
-| *Draft a spec for refunds* | Writes EARS requirements with permanent IDs, scenarios including refusals, quantified non-functional requirements, out of scope; marks every open question `[NEEDS CLARIFICATION: …]` | `docs/specs/NNNN-refunds/spec.md`, status Draft |
+| *Draft a spec for refunds* | Writes EARS requirements with permanent IDs; scenarios, refusals included; quantified non-functional requirements; what is out of scope. Marks every open question `[NEEDS CLARIFICATION: …]` | `docs/specs/NNNN-refunds/spec.md`, status Draft |
 | *(you answer the markers)* | Records each answer in the clarification log | Status Clarified |
 | *(you approve)* | — this step is yours alone | Status Approved |
-| *Design spec 0007* | Places the work in modules and surfaces, runs the constitution check against every convention it touches, proposes ADRs for new decisions | `design.md`, and ADRs as Proposed |
-| *Plan the tasks for 0007* | Orders small, verifiable tasks, acceptance tests before code, each citing its requirement IDs | `tasks.md` |
+| *Design spec 0007* | Places the work in modules and surfaces, checks the design against every convention it touches, proposes ADRs for new decisions | `design.md`, and ADRs as Proposed |
+| *Plan the tasks for 0007* | Orders small, verifiable tasks — acceptance tests before code — each citing its requirement IDs | `tasks.md` |
 | *Implement 0007 T3* | Reads the rules and profile for the paths, writes the failing tagged test, then the code; ticks the task | Code, tests tagged `0007.R2`, a ticked box |
-| *Verify spec 0007* | Runs the spec-conformance audit scoped to the spec, both directions: missing and divergent behaviour, and overreach | A clean run moves the spec to Implemented |
+| *Verify spec 0007* | Runs the spec-conformance audit scoped to the spec, in both directions: missing and divergent behaviour, and overreach | A clean run moves the spec to Implemented |
+| *Change how invoices round totals* (a legacy capability) | Pins today's behaviour with characterization tests, writes the spec that states it, then amends that spec for the change | A spec, and the legacy-register row closed when it is Implemented |
 | *Fix: refunds over the balance are accepted* | Finds the requirement the bug contradicts — or reports a gap to specify first — and fixes it with a regression test tagged to it | A change for the `bugfix` PR template |
 | *Plan a refactor of the billing module* | Scopes work that changes no behaviour | `docs/plans/<topic>.md` |
-| *Run the naming audit* | Follows its prompt under the audit protocol, read-only | A report in `docs/reports/`, or rows in a living audit in `docs/audit/` |
-| *Run the phase gate for G2* | Verifies every criterion of the gate and re-checks earlier ones for regression | A gate report and updated rows in `docs/audit/readiness.md` |
-| *Record a rule: …* | Appends it to the matching `.ai/rules/` file (Boost's `record-rule` where installed) | A rule the next agent and the team will load |
+| *Run the naming audit* | Follows its prompt under the audit protocol, read-only | A report in `docs/reports/`, or rows in a living audit |
+| *Run the phase gate for G2* | Verifies every criterion of the gate, and re-checks earlier ones for regression | A gate report and updated rows in `docs/audit/readiness.md` |
+| *Record a rule: …* | Appends it to the matching `.ai/rules/` file, then runs `.ai/bin/sync-rules` | A rule every agent and the team will load |
 
-Pull requests use `?template=feature.md`, `bugfix.md` or `hotfix.md` (or the default); each names
-its spec, tasks and requirement IDs and links the conventions its checklist enforces.
-
-**Reserved for the owner, never for an agent:** accepting ADRs, approving specs and their
-amendments, answering clarification markers, waiving a gate criterion, advancing the **Phase** line,
-and approving new dependencies, modules or top-level directories.
+**Reserved for the owner, never for an agent:**
+- accepting ADRs, retroactive ones included;
+- approving specs and their amendments;
+- answering clarification markers;
+- waiving a gate criterion;
+- setting the **Phase** line;
+- approving a baseline, a new dependency, module or top-level directory.
 
 ## Choosing your configuration
 
-Each design choice decides which payload files a project keeps and which ADR records it. This
-table is what bootstrap trims by hand today, and it is the contract the scaffolder will implement.
+Each choice decides which rule files a project keeps and which ADR records it. Bootstrap and adopt
+apply this table by hand today; it is the contract the installer will implement.
 
 | Decision | Choices | Keeps | Removes | Recorded in |
 | --- | --- | --- | --- | --- |
-| Shape | Single app · monorepo | Single: the kit at the root. Monorepo: the kit at the root, rule globs re-rooted under each app's directory, each app's own documents in `apps/<app>/docs/` | — | ADR-0002 |
-| Server stack, per app | Laravel · .NET · Next.js full-stack | `docs/conventions/stack-<name>.md` and `.ai/rules/<name>.md` for each stack in use | Profiles and rule files no app uses; `.ai/rules/index.md` regenerated | ADR-0001, `AGENTS.md` → **Stacks** |
+| Project state | No code yet · existing code | No code: `bootstrap.md` path. Existing: `adopt.md` path, `docs/audit/legacy-capabilities.md`, baselines | — | ADR-0001/0002 (retroactive when existing) |
+| Agents | Any of the eight above | Their lines in `.ai/agents`, and the files `sync-rules` generates | Generated files of agents not listed | `.ai/agents` |
+| Shape | Single app · monorepo | Single: the rules at the project root. Monorepo: the rules at the root, rule globs re-rooted under each app's directory, each app's own documents in `apps/<app>/docs/` | — | ADR-0002 |
+| Server stack, per app | Laravel · .NET · Next.js full-stack | `docs/conventions/stack-<name>.md` and `.ai/rules/<name>.md` for each stack in use | Profiles and rule files no app uses; then `sync-rules` | ADR-0001, `AGENTS.md` → **Stacks** |
 | Frontend, per app | Vue · Next.js · none | `stack-vue.md` and `vue.md`, or `stack-nextjs.md` and `nextjs.md` | As above | ADR-0001 |
 | Next.js mode | Full-stack · frontend over another app's API | Both live in `stack-nextjs.md` | — | ADR-0001 |
 | Modularity | Not modular · Level 1 code · Level 2 data · Level 3 service | Everything; the modularity audit runs from G1 | Nothing. Not modular: the owner waives G1.2 and G3.6, citing ADR-0002 | ADR-0002 |
 | Acceptance scenarios | In `spec.md` · a Gherkin runner (Behat, Reqnroll, playwright-bdd) | Runner: `docs/templates/feature.feature`, and `features/` as specs are written | No runner: `docs/templates/feature.feature` | ADR-0001 |
-| Laravel Boost | Yes · no (Laravel apps only) | Yes: `php artisan boost:install` after the copy | — | ADR-0001 |
-| Code host | GitHub · other | GitHub: `.github/PULL_REQUEST_TEMPLATE/` | Other: `.github/`, its checklists ported to the host's templates (GitLab: `.gitlab/merge_request_templates/`) | — |
+| Laravel Boost | Yes · no (Laravel apps only) | Yes: `php artisan boost:install` after installing the rules | — | ADR-0001 |
+| Code host | GitHub · other | GitHub: `.github/PULL_REQUEST_TEMPLATE/` | Other: those templates, their checklists ported to the host's | — |
 | Database, cache, queue, hosting | Per app | No file changes; each profile covers its data-access options | — | ADR-0001 |
 
-Always kept: the nine core conventions, every template the choices above do not remove, all
-eighteen audit prompts (a *Stack notes* row for an absent stack is inert), the core rule files,
-`docs/audit/readiness.md`, and `AGENTS.md`/`CLAUDE.md`. A core convention is never removed.
+Always kept:
+- the nine core conventions;
+- every template the choices above do not remove;
+- all eighteen audit prompts (a *Stack notes* row for an absent stack is inert);
+- the core rule files and `.ai/bin/`;
+- `docs/audit/readiness.md`, `AGENTS.md` and `CLAUDE.md`.
 
 ## How it works
 
 ### Core conventions and stack profiles
 
-The core conventions speak one vocabulary — entry point, Command, Action, Query, Model, Response,
-surface, module — and state each rule once. A profile maps that vocabulary onto a stack: a Laravel
-FormRequest and Spatie Data object, a .NET `sealed record` handled by an `internal` handler, a
-Next.js Zod schema behind a surface-wrapped server action. It also adds the stack's own traps. A
-profile may sharpen a core rule or follow a language idiom where it says so; it never relaxes one.
-Rule files route by file extension (`**/*.php`, `**/*.cs`, `**/*.tsx`, `**/*.vue`), so Laravel's
-`app/` and the Next.js App Router's `app/` never collide.
+The core conventions use one vocabulary — entry point, Command, Action, Query, Model, Response,
+surface, module — and state each rule once. A profile maps that vocabulary onto a stack:
+- Laravel: a FormRequest and a Spatie Data object;
+- .NET: a `sealed record` handled by an `internal` handler;
+- Next.js: a Zod schema behind a surface-wrapped server action.
+
+A profile adds its stack's own pitfalls, and may sharpen a core rule or follow a language idiom
+where it says so. It never relaxes a core rule. Rule files route by file extension (`**/*.php`,
+`**/*.cs`, `**/*.tsx`, `**/*.vue`), so Laravel's `app/` and the Next.js App Router's `app/` never
+collide.
 
 ### Four rule sets
 
@@ -136,14 +209,13 @@ Rule files route by file extension (`**/*.php`, `**/*.cs`, `**/*.tsx`, `**/*.vue
 | --- | --- | --- |
 | **Spec rules** — what is built, and how it is proved | [`specs.md`](template/docs/conventions/specs.md); the `spec`, `design`, `tasks` and `feature` templates | The owner and agents before any behaviour change |
 | **Code rules** — how code is shaped and written | [`architecture`](template/docs/conventions/architecture.md), [`coding`](template/docs/conventions/coding.md), [`frontend`](template/docs/conventions/frontend.md), [`security`](template/docs/conventions/security.md), [`testing`](template/docs/conventions/testing.md), the `stack-*` profiles, routed to by `.ai/rules/` | Agents before any edit; reviewers on every PR |
-| **Audit rules** — how code is examined | [`auditing.md`](template/docs/conventions/auditing.md) (protocol, ownership, severity, evidence, verification) and [`.ai/prompts/audits/`](template/.ai/prompts/audits/) | Whoever runs an audit, person or agent |
+| **Audit rules** — how code is examined | [`auditing.md`](template/docs/conventions/auditing.md) — protocol, ownership, severity, evidence, verification — and [`.ai/prompts/audits/`](template/.ai/prompts/audits/) | Whoever runs an audit, person or agent |
 | **Document rules** — where findings and decisions go | [`documentation.md`](template/docs/conventions/documentation.md), [`docs/templates/`](template/docs/templates/) | Everyone writing a document |
 
-When two sources disagree, the payload's `AGENTS.md` ranks them, highest first:
-
+When sources disagree, `AGENTS.md` ranks them, highest first:
 1. the user's instruction;
 2. the conventions;
-3. path-scoped rules;
+3. the path-scoped rules;
 4. accepted ADRs and Approved specs;
 5. generated framework guidelines;
 6. existing code.
@@ -160,32 +232,35 @@ flowchart LR
     P -->|spec-conformance clean| I[Implemented]
 ```
 
-- **Traceability:** it runs requirement → task → tagged test → code in every stack: Pest
-  `->group('0007.R2')`, xUnit `[Trait("Requirement", "0007.R2")]`, a Vitest `[0007.R2]` title
-  prefix, a Playwright `@0007.R2` tag, a Gherkin `@0007.R2` tag. "Is R2 proved?" is one grep.
-  Requirement IDs never appear in code comments.
-- **Overreach is a defect:** behaviour no requirement asks for is found by the spec-conformance
-  audit's reverse sweep over every entry point, job, setting and form option.
-- **Bugs and gaps:** a bug contradicts a requirement; behaviour no requirement covers is a gap, and
-  gets specified before it is fixed.
+- **Traceability:** each requirement is followed through task, tagged test and code in every stack,
+  so "is R2 proved?" is one grep, and `.ai/bin/check` asks it on every change. The tags:
+  - Pest: `->group('0007.R2')`
+  - xUnit: `[Trait("Requirement", "0007.R2")]`
+  - Vitest: a `[0007.R2]` title prefix
+  - Playwright and Gherkin: a `@0007.R2` tag
+- **Overreach:** behaviour no requirement asks for is a defect. The spec-conformance audit's reverse
+  sweep finds it.
+- **Existing projects:** behaviour that predates the rules sits on the legacy register instead, and
+  gets its spec the first time it changes.
 
 ### Lifecycle and gates
 
-Five phases, each closed by a gate of checkable criteria — 40 in all, tracked in
+Five phases, each closed by a gate of checkable criteria — 40 in all. They are tracked in
 [`docs/audit/readiness.md`](template/docs/audit/readiness.md) and verified by the phase-gate audit.
+A new project starts at G0. An adopted one is assessed against every gate, and the owner sets its
+phase from the evidence.
 
 | Gate | Closes when |
 | --- | --- |
-| **G0 Bootstrap** | Stacks and shape decided in ADRs; context page and glossary; hygiene; one-command local boot; CI on every PR; PR templates |
+| **G0 Bootstrap** | Rules installed and agents configured; stacks and shape decided in ADRs; context page and glossary; hygiene; one-command local boot; CI with `.ai/bin/check`; PR templates |
 | **G1 Foundation** | Surfaces declared; modules exist and their graph is enforced; arch tests; authentication and authorization specified and deny-by-default; logging, queues, fail-fast config; isolated test database; frontend shell; staging deploy; foundation audits clean |
-| **G2 Build** | Every in-scope capability's spec Implemented; every requirement traced to a passing test; no High overreach; build audits run, no Critical |
+| **G2 Build** | Every in-scope capability's spec Implemented, legacy ones included; every requirement traced to a passing test; no High overreach; build audits run, no Critical |
 | **G3 Harden** | Security, bugs, performance, simplification, dead code, complexity, naming, consistency, modularity, documentation drift, frontend and operations within their bars; a backup restored once |
 | **G4 Release** | Phase gate at the release commit; zero open Critical or High; released specs listed; rollback tested; production configuration verified; tagged |
 
 ### Audits
 
-Eighteen audits, every one read-only, sharing one protocol:
-
+Eighteen audits, all read-only, under one protocol:
 1. pin the commit;
 2. declare the scope, the method and the bar;
 3. give every finding a location, evidence, impact and fix;
@@ -196,6 +271,7 @@ Each concern has exactly one owning audit, so a finding is filed once and linked
 
 | When | Audits |
 | --- | --- |
+| Adopting an existing project | architecture-conformance, modularity (when modular), security, test-coverage, dependencies, spec-conformance in register mode |
 | Closing G1 | architecture-conformance, modularity (when modular), dependencies, operations |
 | Each spec reaching Implemented | spec-conformance, scoped to that spec |
 | Closing G2 | spec-conformance, consistency, bugs, database-schema, frontend, test-coverage; architecture-conformance and modularity re-run |
@@ -208,19 +284,20 @@ Each concern has exactly one owning audit, so a finding is filed once and linked
 ```
 README.md                         This manual — stays with the kit
 AGENTS.md, CLAUDE.md              Instructions for agents maintaining the kit — stay with the kit
-template/                         The payload — copied into every new project
-  AGENTS.md                       The project's entry point: authority, stacks, spec-driven
-                                  development, read-before-write, phase (filled at bootstrap)
+template/                         The ruleset — installed into a project
+  AGENTS.md                       The project's entry point for every agent: authority, stacks,
+                                  rules for every agent, spec-driven development, read-before-write
   CLAUDE.md                       Imports AGENTS.md for Claude Code
-  README.md                       The project's own README, filled at bootstrap
-  .claude/rules -> ../.ai/rules   Claude Code loads each rule file when a matching path is touched
   .ai/
-    rules/                        Path-scoped agent rules, in Laravel Boost's format
-      index.md                    Glob → rule file, exactly as Boost regenerates it
+    agents                        The coding agents in use — the project uncomments its own
+    bin/sync-rules                Generates each agent's native rule files and the rules index
+    bin/check                     The agent-independent gate for CI
+    rules/                        The one source of path-scoped rules, in Laravel Boost's format
       general backend frontend database tests specs docs audits    — core
       laravel dotnet nextjs vue                                    — per stack
     prompts/
-      bootstrap.md                Runbook for Phase 0
+      bootstrap.md                Phase 0 for a project with no code yet
+      adopt.md                    Adoption of a project that already has code
       audits/                     One runnable prompt per audit type (18)
   docs/
     conventions/                  Normative rules
@@ -235,96 +312,127 @@ template/                         The payload — copied into every new project
 
 ## Extending the kit
 
-All changes to what projects receive happen in `template/`; the root `AGENTS.md` lists the
+Every change to what projects receive happens in `template/`. The root `AGENTS.md` lists the
 invariants a change must keep.
 
 - **A code rule:** add it under the matching heading of the core convention, with its reason and
-  its realisation in each profile that needs one; propose an arch test when it is mechanically
+  its realisation in each profile that needs one. Propose an arch test when it is mechanically
   checkable.
-- **A stack:** write `template/docs/conventions/stack-<name>.md` from the `convention.md` template,
-  mapping every row of the core concepts table. Then:
+- **A stack:**
+  - write `template/docs/conventions/stack-<name>.md` from the `convention.md` template, mapping
+    every row of the core concepts table;
   - add `template/.ai/rules/<name>.md` with its globs;
   - add the profile's row to the payload `AGENTS.md`;
   - add a *Stack notes* row to every audit prompt;
-  - add it to [Choosing your configuration](#choosing-your-configuration);
-  - regenerate `index.md`.
+  - add the stack to [Choosing your configuration](#choosing-your-configuration).
+- **An agent:**
+  - check its current documentation for where rules live and how a rule declares its files;
+  - add a case to `render` in `template/.ai/bin/sync-rules`, its directory to `AGENT_DIRS` and its
+    key to `KNOWN`;
+  - add its line to `template/.ai/agents`, and its row to the table above;
+  - smoke-run on a scratch copy of `template/` with every agent enabled.
 - **An audit:** start from the `audit-prompt.md` template. Add it to the catalog and the ownership
   table in `auditing.md`, and, if a gate requires it, to `lifecycle.md` and `readiness.md`.
-- **A trap found while using the kit in a project:** record it in that project's `.ai/rules/`; if it
-  holds for every project, bring it back here.
+- **A trap found while using the rules in a project:** record it in that project's `.ai/rules/`. If
+  it holds for every project, bring it back here.
 
-## Roadmap: the interactive scaffolder
+## Roadmap: the installer
 
-Not built yet. The decisions so far:
+Not built yet.
 
-- **Language:** Bash compatible with 3.2, macOS's system bash.
-- **Scope:** kit only — it copies and fills the payload, and installs no framework and generates no
-  application code.
-- **Delivery:** one `install.sh` that fetches over HTTPS without cloning.
+**Decided:**
+- Bash, compatible with 3.2.
+- Rules only: it never creates a project, application code or project infrastructure.
+- One `install.sh`, fetched over HTTPS without cloning.
+- One behaviour for a new or an existing project, with or without git.
+- `install`, `update` and `remove`.
+- The project's file always wins; the kit's version is written beside it as
+  `<file>.specforge-incoming`.
+- What was installed is recorded in `.ai/specforge.lock`.
 
-Still open:
-
+**Open:**
 - where it is hosted, and the install URL;
 - the release and tag scheme;
-- the manifest format.
+- the format of the root `manifest`, which maps each choice to template paths, and of
+  `.ai/specforge.lock`.
 
 ### Intended use
 
 ```bash
-# interactive
-curl -fsSL https://<host>/install.sh | bash -s -- my-product
+# into the current directory, interactively
+curl -fsSL https://<host>/install.sh | bash -s -- install
 
-# reproducible, no prompts — CI, or a second project with the same architecture
-curl -fsSL https://<host>/install.sh | bash -s -- my-product --answers architecture.answers
+# into another directory, no prompts — CI, or a second project with the same architecture
+curl -fsSL https://<host>/install.sh | bash -s -- install --dir ~/code/my-app --answers rules.answers
+
+# later: newer rules, your edits kept — or take back exactly what was installed
+curl -fsSL https://<host>/install.sh | bash -s -- update
+curl -fsSL https://<host>/install.sh | bash -s -- remove
 
 # read before you run — recommended for anything piped to a shell
-curl -fsSLo install.sh https://<host>/install.sh && less install.sh && bash install.sh my-product
+curl -fsSLo install.sh https://<host>/install.sh && less install.sh && bash install.sh install --dry-run
 ```
 
 ### What it will do
 
-1. **Ask** the questions in [Choosing your configuration](#choosing-your-configuration): shape;
-   per app its path, server stack, frontend stack and Next.js mode; modularity level and modules;
-   acceptance-scenario runner; Laravel Boost; code host. Answers come from prompts, from flags, or
-   from an answers file that is parsed, never sourced.
-2. **Fetch** the tarball of its own pinned release and verify it against the release's published
-   SHA-256 checksum.
-3. **Select** only the template paths a root-level `manifest` assigns to the answers. That
-   manifest becomes the single source of truth, and the configuration table above its readable twin.
-4. **Fill** what the answers already decide:
-   - the **Stacks** table and the project README's app table;
-   - ADR-0001 and ADR-0002 drafted as Proposed, their alternatives left to bootstrap;
-   - rule globs re-rooted for a monorepo;
-   - `.ai/rules/index.md` regenerated in Boost's exact format.
-5. **Record** the kit version and the answers in the project, so a later run can show what an
-   upgrade would change.
-6. **Hand over** to the agent's bootstrap prompt. Bootstrap then asks only what a script cannot:
-   the product, its capabilities, the vocabulary and the constraints.
+1. **Detect:**
+   - stacks: `composer.json` with `artisan`; `*.sln`/`*.csproj`; `next.config.*`; `vue` in
+     `package.json`;
+   - the layout, and Laravel Boost;
+   - the agents already configured, and instruction or docs files already present.
+
+   A project with no code detects nothing.
+2. **Ask** the questions in [Choosing your configuration](#choosing-your-configuration), each
+   defaulting to what detection found. Answers come from prompts, flags, or an answers file, which
+   is parsed, never sourced.
+3. **Fetch** the tarball of its pinned release and verify its published SHA-256 checksum.
+4. **Plan** every file it would write, keep or skip. `--dry-run` stops here.
+5. **Install** under one policy for first installs and updates alike:
+
+   | File | `install` / `update` | `remove` |
+   | --- | --- | --- |
+   | Not present | Write it | — |
+   | Installed by the kit, unmodified since (checksum matches) | Update it | Delete it |
+   | Modified since, or the project's own | Keep it; write the kit's beside it as `*.specforge-incoming`, and report it | Keep it |
+   | Shared entry files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`) | Write only between `<!-- specforge:begin -->` and `<!-- specforge:end -->` | Remove that block |
+   | Your README, ignore files, settings JSON | Never touched; print what to add | — |
+
+6. **Fill** what the answers already decide:
+   - the **Stacks** table;
+   - ADR-0001 and ADR-0002 drafts;
+   - rule globs re-rooted for a monorepo.
+
+   Then run `.ai/bin/sync-rules` for the chosen agents.
+7. **Record** in `.ai/specforge.lock` the kit version, the answers, and a checksum of every
+   installed file.
+8. **Hand over:** to `bootstrap.md` when there is no code, to `adopt.md` when there is. Either then
+   asks only what a script cannot.
 
 ### Guarantees it will keep
 
-- Safe to pipe:
-  - the body is one function, called on the script's last line, so a truncated download executes
-    nothing;
+- **Safe to pipe:**
+  - the body is one function, called on the last line, so a truncated download runs nothing;
   - prompts read from `/dev/tty`, because stdin is the script.
-- Bash 3.2 throughout: no associative arrays, `${var,,}`, `mapfile` or `|&`. Its only dependencies
-  are `curl`, `tar` and POSIX utilities.
-- Refuses a non-empty directory unless `--dry-run` has listed what would change and `--force` is
-  given.
-- Writes nothing outside the target directory, and never uses `sudo`.
-- Makes no commit, and makes no network call beyond the release download.
+- **Portable:** Bash 3.2 throughout, needing only `curl`, `tar` and POSIX tools — not `git`.
+- **Never overwrites** a file it did not install unmodified.
+- **Version control is optional:** in a git work tree it reports uncommitted changes and records
+  the commit, but never commits or creates a branch.
+- **Contained:** it writes nothing outside the target directory, never uses `sudo`, and makes no
+  network call beyond the release download.
 
 ## Origin
 
 Derived from the rulesets of the zuus monorepo (`30443ad8b`, 2026-11-22): its `AGENTS.md`,
 conventions, templates, app-level conventions, pull-request templates and database-schema audit
-prompt. They were generalised, split into a stack-neutral core with four profiles, and extended:
+prompt. They were generalised, split into a stack-neutral core with four profiles, and extended
+with:
 
-- spec-driven development;
+- spec-driven development, with a legacy path for existing code;
 - security, testing, documentation, auditing and lifecycle conventions;
 - module boundaries as governed seams with declared modularity levels;
 - rules distilled from zuus's own audit reports;
-- seventeen further audit prompts.
+- seventeen further audit prompts;
+- delivery to every major coding agent.
 
 The pull-request checklists now link the conventions instead of restating them; zuus's restated
 checklist had drifted from its own architecture convention.
