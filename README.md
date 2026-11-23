@@ -28,7 +28,7 @@ code and no project infrastructure, and it needs no version control.
 From the project directory, new or existing:
 
 ```bash
-curl -fsSL https://github.com/<org>/specforge/releases/latest/download/install.sh | bash -s -- install
+curl -fsSL https://github.com/shakilnwz/specforge/releases/latest/download/install.sh | bash -s -- install
 ```
 
 From a checkout of this repository, with no download:
@@ -67,10 +67,12 @@ EOF
 ```
 
 A project's `.ai/specforge.lock` is itself a valid answers file. `--dry-run` shows what would change
-and changes nothing. Reading a script before piping it to a shell is the better habit:
+and changes nothing. Every command, option and answer key is listed under
+[Commands and options](#commands-and-options), and by `install.sh help`. Reading a script before
+piping it to a shell is the better habit:
 
 ```bash
-curl -fsSLo install.sh https://github.com/<org>/specforge/releases/latest/download/install.sh
+curl -fsSLo install.sh https://github.com/shakilnwz/specforge/releases/latest/download/install.sh
 less install.sh && bash install.sh install --dry-run
 ```
 
@@ -114,9 +116,13 @@ Both end with a phase-gate report.
 From the project directory, with the installer of the version you want:
 
 ```bash
-curl -fsSL https://github.com/<org>/specforge/releases/latest/download/install.sh | bash -s -- update
+curl -fsSL https://github.com/shakilnwz/specforge/releases/latest/download/install.sh | bash -s -- update
 #   … -- update --reconfigure     answer the questions again: add a stack, drop an agent
 #   … -- remove                   take back what was installed and is still unmodified
+
+# or from a checkout of this repository
+./install.sh update --dir ~/code/my-app --from .
+./install.sh remove --dir ~/code/my-app
 ```
 
 `update` replaces only what is still as the kit installed it. A file you changed stays yours, and
@@ -380,6 +386,49 @@ invariants a change must keep.
 
 `install.sh`, `manifest` and `release.sh`, at the root of this repository.
 
+### Commands and options
+
+The same commands and options work either way:
+
+```bash
+# from a release, in the project directory
+curl -fsSL https://github.com/shakilnwz/specforge/releases/latest/download/install.sh | bash -s -- <command> [options]
+
+# from a checkout of this repository, with no download
+./install.sh <command> --dir <project> --from . [options]
+```
+
+| Command | Does |
+| --- | --- |
+| `install` | Adds the rules to a project that does not carry them yet; refuses one that does |
+| `update` | Brings the rules to the installer's version, under [the policy](#the-policy) |
+| `remove` | Takes back what was installed and is still unmodified, then the lock |
+| `help` | Prints the commands, the options and the answer keys |
+
+| Option | With | Effect |
+| --- | --- | --- |
+| `--dir DIR` | every command | The project directory; the current one by default. It must already exist |
+| `--answers FILE` | `install`, `update` | Answers as `key=value` lines, read and never run, instead of the questions. On `update`, they replace the recorded answers key by key |
+| `--yes` | `install` | Asks nothing, and takes what detection found |
+| `--reconfigure` | `update` | Asks the questions again, defaulting to the recorded answers |
+| `--dry-run` | every command | Prints what would change, and changes nothing |
+| `--version vX.Y.Z` | `install`, `update` | Installs that release instead of the installer's own |
+| `--from PATH` | `install`, `update` | Installs from a checkout or a release tarball, with no download |
+
+`SPECFORGE_BASE_URL` points the download at a mirror holding
+`<version>/specforge-<version>.tar.gz` and its `.sha256`, instead of the GitHub release.
+
+| Answer key | Values | Default, when not answered |
+| --- | --- | --- |
+| `state` | `new` · `existing` | `existing` when an app is detected, or the directory holds anything beyond docs, agent instructions, a README, a licence and version-control files |
+| `app` | `<path> <profile>…`, one line per path; profiles `laravel` `dotnet` `nextjs` `react` `vue` | The detected apps; with none, every profile is installed |
+| `agents` | Any of `claude` `codex` `cursor` `copilot` `windsurf` `antigravity` `gemini` `kiro`, space-separated, or `none` | The agents whose files are already in the project |
+| `gherkin` | `yes` · `no` | `yes` when a `features/` directory exists |
+| `host` | `github` · `other` | `github`, unless the git remote is elsewhere |
+
+Exit status: `0` when done, including when files are kept for reconciliation, or when you decline
+at the confirmation; `1` when it refuses or fails; `2` on a usage error.
+
 ### What it does
 
 1. **Detect**, read-only:
@@ -449,7 +498,7 @@ A new template file needs no line unless only some answers keep it.
 ### Releasing
 
 ```bash
-./release.sh v1.0.0 --repo <org>/specforge
+./release.sh v1.0.0 --repo shakilnwz/specforge
 ```
 
 It checks the kit first. Then it builds the three release assets (the stamped `install.sh`, the

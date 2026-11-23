@@ -3,7 +3,7 @@
 # SpecForge installer: adds the SpecForge rules (coding, spec, audit and documentation rules, with
 # the prompts and templates that apply them) to a project directory, new or existing.
 #
-#   curl -fsSL https://github.com/<org>/specforge/releases/latest/download/install.sh | bash -s -- install
+#   curl -fsSL https://github.com/shakilnwz/specforge/releases/latest/download/install.sh | bash -s -- install
 #
 # Run `install.sh help` for commands and options.
 #
