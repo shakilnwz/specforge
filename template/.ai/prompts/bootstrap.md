@@ -7,7 +7,7 @@ specification, every placeholder filled, nothing built yet.
 
 **Mode:** Writes documents and repository hygiene files only. No application code, no framework
 install, no dependency, until the owner approves the stack ADR — then only what G0 requires.
-**Output:** filled `AGENTS.md`; `docs/adr/0001-*.md`, `docs/adr/0002-*.md`; a context page in
+**Output:** filled `AGENTS.md` and `README.md`; `docs/adr/0001-*.md`, `docs/adr/0002-*.md`; a context page in
 `docs/architecture/`; `docs/reference/glossary.md`; hygiene files; the kit trimmed to the stacks in
 use; updated G0 rows in `docs/audit/readiness.md`; a G0 gate report.
 **Inputs:** the owner, who answers the questions below. Never invent an answer the owner did not
@@ -15,10 +15,10 @@ give; a placeholder left open is better than a fabricated fact.
 
 ## Before you start
 
-1. Confirm the kit is present: `AGENTS.md`, `CLAUDE.md`, `.ai/rules/`, `.ai/prompts/`,
+1. Confirm the kit is present: `AGENTS.md`, `CLAUDE.md`, `README.md`, `.ai/rules/`, `.ai/prompts/`,
    `docs/conventions/` (core conventions and `stack-*.md` profiles), `docs/templates/`,
    `docs/audit/readiness.md`, `.claude/rules` linking to `.ai/rules`.
-2. List every `bootstrap:` marker: `grep -rn 'bootstrap:' AGENTS.md docs .ai .github`.
+2. List every `bootstrap:` marker: `grep -rn 'bootstrap:' AGENTS.md README.md docs .ai .github`.
 3. Read `lifecycle.md` → G0, [`documentation.md`](../../docs/conventions/documentation.md) and
    [`specs.md`](../../docs/conventions/specs.md).
 
@@ -60,7 +60,8 @@ Ask in one round, grouped, with a recommended default for each where one exists:
    row per concept — the term, its one-line meaning, and the names it must not be called.
 4. Fill `AGENTS.md`: the **Stacks** table (each app, its path, its profiles); **Architecture
    Overview** from the ADRs; **Common Commands**, **Local Endpoints** and **Database** once the
-   environment exists (otherwise leave the marker and say so).
+   environment exists (otherwise leave the marker and say so). Fill `README.md` from the same
+   sources: the product, the apps and their stacks, and the local boot command.
 5. **Trim the kit to the stacks in use**, once the owner approves ADR-0001: list the profiles, the
    `.ai/rules/` stack files and the PR-template lines no app uses, and remove them with the owner's
    approval. Never remove a core convention.

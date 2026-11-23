@@ -42,7 +42,8 @@ code it points at. Never pass a line number or class name on from memory.
 
 ## Hand-off
 End with what changed, which spec and tasks it served, what was not verified (lint, tests, a
-browser check), which audit rows, task boxes or status lines moved, and any rule you recorded. State failures plainly.
+browser check), which audit rows, task boxes or status lines moved, and any rule you recorded.
+State failures plainly.
 
 ## Commits
 Commit or push only when asked. A commit that closes an audit finding updates the finding's row in
