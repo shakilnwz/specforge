@@ -1,0 +1,154 @@
+### Important
+No need to lint and test unless asked. Say so in the hand-off when a change was not verified.
+Talk to me in advanced and sophisticated language of the software engineering domain or industry.
+
+<!--
+  Bootstrap: every "bootstrap:" marker below is filled when this kit is copied into a
+  project, and the marker removed. Until then the section is a placeholder, not a fact.
+-->
+
+## Phase
+
+**Phase 0 — Bootstrap.** <!-- bootstrap: advance this line at each gate -->
+The phases, their gates and what each gate requires are in
+[`docs/conventions/lifecycle.md`](docs/conventions/lifecycle.md); progress against them is tracked
+in [`docs/audit/readiness.md`](docs/audit/readiness.md). Work that belongs to a later phase is not
+started before the current gate closes unless the user asks for it.
+
+## Stacks
+
+Each app is bound to the stack profiles that realise the core conventions for it. A profile never
+relaxes a core rule; where the two seem to disagree, the core wins and the profile is a defect.
+
+| App / path | Stack | Profiles |
+| --- | --- | --- |
+| <!-- bootstrap: `<path>` --> | <!-- bootstrap: Laravel · .NET · Next.js, with versions --> | <!-- bootstrap: [`stack-<name>.md`](docs/conventions/stack-<name>.md), one per stack the app uses --> |
+
+## Spec-driven development
+
+Behaviour is specified before it is built, under [`specs.md`](docs/conventions/specs.md): a spec in
+`docs/specs/NNNN-<capability>/` with numbered EARS requirements, approved by the owner, then a
+design, then ordered tasks, then code proved by tests tagged with requirement IDs. No behaviour
+without an Approved spec; no behaviour beyond it. Work that changes no behaviour is a plan in
+`docs/plans/`.
+
+## Authority
+
+When two sources disagree, the higher one wins and the lower one is a defect to report:
+
+1. The user's explicit instruction in the current session.
+2. `docs/conventions/*` — normative. A change that breaks a rule there is wrong even if it works.
+3. `.ai/rules/*` — path-scoped rules, decisions and traps. They bind the paths in their `paths:`
+   frontmatter and never contradict a convention; a rule that does is stale.
+4. Accepted ADRs in `docs/adr/` — for the decision they record; Approved specs in `docs/specs/`
+   and their `features/` scenarios — for the behaviour they require. A spec that needs a convention
+   broken is a defect in the spec until an ADR changes the convention.
+5. Generated framework guidelines (Laravel Boost's `<laravel-boost-guidelines>` block and its
+   `.ai/rules/boost/`) — they describe the framework, not this project, and yield to 1–4. Where
+   they conflict with the line under **Important** above, the line above wins.
+6. Existing code. Sibling files show the local shape; they are evidence, not authority.
+
+Descriptive documents (`architecture/`, `reference/`, `workflows/`) never override a normative
+one. When a descriptive page contradicts the code or a convention, the page is wrong: fix it in
+the same change, or report it.
+
+## Before writing anything
+
+1. For a behaviour change, find the spec and the task it serves in `docs/specs/`. If there is none,
+   or the spec is not Approved, stop: draft or amend the spec and ask the owner.
+2. Open [`.ai/rules/index.md`](.ai/rules/index.md), and read every rule file whose globs cover the
+   paths in scope.
+3. Run `grep -rin '<keyword>' .ai/rules docs/conventions` for the subject of the change, to catch
+   what a path match misses.
+4. Read the conventions those rule files bind, and the profile of the app's stack (**Stacks**
+   above). [`architecture.md`](docs/conventions/architecture.md) and
+   [`coding.md`](docs/conventions/coding.md) bind all backend code;
+   [`frontend.md`](docs/conventions/frontend.md) binds all frontend code.
+5. Check `docs/audit/` for an open finding on the code being touched. A change that closes one
+   updates its row in the same change.
+
+Record a durable rule — a settled decision, a non-obvious trap, a standing constraint — in
+`.ai/rules/` (Boost's `record-rule` tool where it is installed), never in a personal or
+session-scoped memory: only the repository is shared with the next agent and the team.
+
+## Rules (CRITICAL)
+
+| Convention | Governs |
+| --- | --- |
+| [`architecture.md`](docs/conventions/architecture.md) | The one-way flow, what each layer may and may not do, module boundaries, routes, list endpoints |
+| [`coding.md`](docs/conventions/coding.md) | How code inside a layer is written: typing, models, controllers, DTOs, database, formatting, naming, comments |
+| [`frontend.md`](docs/conventions/frontend.md) | Frontend structure, ownership and colocation, naming, routing, data and state, behaviour |
+| [`specs.md`](docs/conventions/specs.md) | Spec-driven development: artifacts, statuses, EARS requirements, traceability, Definitions of Ready and Done |
+| [`security.md`](docs/conventions/security.md) | The baseline every surface meets: authorization, untrusted input, credentials, concurrency on money and state |
+| [`testing.md`](docs/conventions/testing.md) | What gets a test, which kind, how conventions are enforced mechanically |
+| [`documentation.md`](docs/conventions/documentation.md) | Where every document goes, its template, its lifecycle |
+| [`auditing.md`](docs/conventions/auditing.md) | How an audit is scoped, run, verified and written |
+| [`lifecycle.md`](docs/conventions/lifecycle.md) | The phases from blank repository to release, and the gate closing each |
+
+Stack profiles realise the core conventions per stack; the **Stacks** table binds them to apps:
+
+| Profile | Realises the core for |
+| --- | --- |
+| [`stack-laravel.md`](docs/conventions/stack-laravel.md) | Laravel: modules, routes and surfaces, DataTables lists, models, PHP idiom, Pest |
+| [`stack-dotnet.md`](docs/conventions/stack-dotnet.md) | ASP.NET Core: solution layout, module visibility, minimal APIs, EF Core, C# idiom, xUnit |
+| [`stack-nextjs.md`](docs/conventions/stack-nextjs.md) | Next.js App Router: full-stack or frontend mode, server/client boundary, server actions, caching |
+| [`stack-vue.md`](docs/conventions/stack-vue.md) | Vue 3: the feature tree, views and partials, named routes, Pinia |
+
+An app's own `docs/conventions/` binds the paths it covers; read the matching file before touching
+them:
+
+| Path | Convention |
+| --- | --- |
+| <!-- bootstrap: `<glob>` --> | <!-- bootstrap: [`<file>.md`](<path>) --> |
+
+## Audits
+
+An audit is read-only. It changes nothing but its own document: no code, no migration, no
+database write, no dependency change. Run one from its prompt in
+[`.ai/prompts/audits/`](.ai/prompts/audits/), under the protocol in
+[`auditing.md`](docs/conventions/auditing.md); write a new audit type from
+[`docs/templates/audit-prompt.md`](docs/templates/audit-prompt.md).
+
+## Architecture Overview
+
+<!-- bootstrap: the stack, its versions, and the top-level layout, one bullet per directory.
+     Name the ADR that chose the stack. Example shape:
+
+- **Stack:** Laravel <N> on PHP <N>, Vue 3 + TypeScript, TailwindCSS v4, Pinia, Vite — ADR-0001
+- **apps/<app>** or **app/**: <what it is>
+- **modules/**: one directory per bounded module; see docs/conventions/architecture.md
+- **packages/**: shared workspace packages, one line each
+-->
+
+- **docs/**: whole-project documentation, laid out by
+  [`documentation.md`](docs/conventions/documentation.md) — specs, ADRs, conventions and stack
+  profiles, architecture, reference (the glossary among it), workflows, plans, audits, reports —
+  plus `docs/templates/`, one template per document type and the only templates in the repo
+- **features/**: executable acceptance scenarios, tagged with requirement IDs, when a Gherkin
+  runner is used
+- **.ai/**: material addressed to AI agents rather than people — `rules/` (path-scoped, indexed by
+  `rules/index.md`) and `prompts/` (runnable tasks, the audits among them). Laravel Boost reads
+  `.ai/{guidelines,skills,rules}`; `.claude/rules` links to `.ai/rules` so Claude Code loads the
+  same files by path
+
+## Common Commands
+
+<!-- bootstrap: the commands an agent needs and cannot guess — boot, test, lint, build, and
+     where each runs (host or container). Name the CI gates: whatever CI fails on is listed here. -->
+
+## Local Endpoints
+
+<!-- bootstrap: every local URL and port, and the single source of truth for each domain. -->
+
+## Database
+
+<!-- bootstrap: engine and version, connection, credentials for local only, how the test
+     database is isolated from the dev database. -->
+
+## Important Notes
+
+- The project prioritizes clean final design over backward compatibility — refactor aggressively.
+  Until the first release there are no consumers to stay compatible with; after it, a breaking
+  change needs an ADR.
+- Never create a documentation file the user did not ask for, except the one a rule above
+  requires: an audit's own document, a drift fix, or a status line moved by the change.
