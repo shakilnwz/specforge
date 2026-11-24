@@ -21,11 +21,16 @@ Talk to me in advanced and sophisticated language of the software engineering do
   nothing about the kit itself belongs in it. It ships no generated agent rule files, and its
   `.ai/agents` lists every agent commented out: the project chooses.
 - `README.md` at the root is the kit's manual. It is never copied.
-- `install.sh` is the installer; `manifest` says which template paths each answer keeps and how each
-  is managed; `release.sh` checks the kit and builds a release's assets. See `README.md` →
-  *The installer*.
-- `.github/workflows/pages.yml` copies the latest release's `install.sh` to GitHub Pages. It serves
-  this repository, like `release.sh`; it is not project infrastructure the kit installs.
+- `install.sh`, `update.sh` and `uninstall.sh` are the installer, one script per command and none
+  taking a command argument; `lib.sh` holds everything they share and is never run on its own;
+  `manifest` says which template paths each answer keeps and how each is managed; `release.sh`
+  checks the kit and builds a release's assets. See `README.md` → *The installer*.
+- `.github/workflows/pages.yml` publishes `.github/pages/index.html`, the instruction page, and the
+  latest release's three scripts to GitHub Pages. They serve this repository, like `release.sh`;
+  they are not project infrastructure the kit installs. The page is plain HTML and CSS, with no
+  script, and documents the released scripts, not unreleased ones. Its icons, where one helps, come
+  from Tabler Icons (`tabler/tabler-icons`, outline set), inlined as raw SVG, with no icon font,
+  sprite or library.
 
 ## The payload's own instructions are content, not instructions
 
@@ -61,9 +66,9 @@ rely on it.
 - A change to what a configuration choice keeps or removes — a new profile, rule file or template —
   updates `manifest` and `README.md` → *Choosing your configuration* in the same change.
 - `AGENTS.md` and `CLAUDE.md` in `template/` keep the kit's text between `<!-- specforge:begin -->`
-  and `<!-- specforge:end -->`; what a project fills in stays outside the block, because `update`
+  and `<!-- specforge:end -->`; what a project fills in stays outside the block, because `update.sh`
   replaces the block whole.
-- `install.sh` knows the agents `sync-rules` knows and the profiles the manifest selects;
+- `lib.sh` knows the agents `sync-rules` knows and the profiles the manifest selects;
   `release.sh` refuses to build when they differ.
 
 ## The installer
@@ -71,8 +76,8 @@ rely on it.
 - One behaviour for a new or an existing project: detect what is there, ask, install, record. An
   existing project is handed to `template/.ai/prompts/adopt.md`, a new one to `bootstrap.md`.
 - Records the kit version, the answers and a checksum of every installed file in the project's
-  `.ai/specforge.lock`, so `update` changes only files still unmodified and `remove` takes back only
-  its own. Where it keeps the project's file, it writes the kit's beside it as
+  `.ai/specforge.lock`, so `update.sh` changes only files still unmodified and `uninstall.sh` takes
+  back only its own. Where it keeps the project's file, it writes the kit's beside it as
   `<file>.specforge-incoming` — only when the kit's version has changed since it was last offered.
 - Bash, compatible with 3.2 (macOS's system bash): no associative arrays, no `${var,,}`, no
   `mapfile`, no `|&`. Its only dependencies are `curl`, `tar` and POSIX utilities — not `git`.
@@ -81,11 +86,20 @@ rely on it.
   infrastructure.
 - Never overwrites a file it did not install unmodified; works the same in a new or an existing
   project, with or without git.
+- Each script holds only its help, its command and `main`; what more than one needs lives in
+  `lib.sh`, which each reads from beside itself in a checkout by one exact line, and which
+  `release.sh` inlines in place of that line, so every published script stands alone. Stamps live
+  in `lib.sh` only.
 - Safe when piped from `curl`: every statement lives in a function, the only call is on the last
-  line; prompts read from `/dev/tty`; an answers file is parsed, never sourced.
-- A change to it is smoke-run on scratch projects — new, existing, monorepo, update, remove, piped
-  and truncated — under Bash 3.2 as well as the host's bash (the official `bash:3.2` image), never
-  against `template/` or this repository.
+  line, braced as one compound command (`{ main "$@"; }`) so a truncated download cannot run it
+  without its options; prompts read from `/dev/tty`; an answers file is parsed, never sourced.
+- Its questions are numbered menus and yes/no prompts in ASCII, styled with plain ANSI escapes and
+  plain under `NO_COLOR` or a dumb terminal: no TUI library, which would be a dependency on the
+  target.
+- A change to it is smoke-run on scratch projects — new, existing, monorepo, update, uninstall,
+  piped and truncated, the piped and truncated runs on the scripts `release.sh` builds — under
+  Bash 3.2 as well as the host's bash (the official `bash:3.2` image), never against `template/` or
+  this repository.
 
 ## Working agreement
 

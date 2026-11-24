@@ -27,17 +27,18 @@ code and no project infrastructure, and it needs no version control.
 From the project directory, new or existing:
 
 ```bash
-curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash -s -- install
+curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash
 ```
 
 From a checkout of this repository, with no download:
 
 ```bash
-./install.sh install --dir ~/code/my-app --from .
+./install.sh --dir ~/code/my-app --from .
 ```
 
 It first detects what the project already is: its apps and their stacks, the coding agents
-configured, and the code host. Then it asks five questions, each defaulting to what it found:
+configured, and the code host. Then it asks five questions, as numbered menus or yes/no, each
+defaulting to what it found:
 
 1. a new project, or an existing one;
 2. each app's path and its profiles, in any combination. A frontend inside a server app
@@ -62,17 +63,17 @@ agents=claude cursor
 gherkin=no
 host=github
 EOF
-./install.sh install --dir ~/code/my-app --from . --answers rules.answers
+./install.sh --dir ~/code/my-app --from . --answers rules.answers
 ```
 
 A project's `.ai/specforge.lock` is itself a valid answers file. `--dry-run` shows what would change
-and changes nothing. Every command, option and answer key is listed under
-[Commands and options](#commands-and-options), and by `install.sh help`. Reading a script before
-piping it to a shell is the better habit:
+and changes nothing. Options follow `bash -s --` when the script is piped. Every script, option and
+answer key is listed under [Commands and options](#commands-and-options), and by each script's
+`--help`. Reading a script before piping it to a shell is the better habit:
 
 ```bash
 curl -fsSLo install.sh https://shakilnwz.github.io/specforge/install.sh
-less install.sh && bash install.sh install --dry-run
+less install.sh && bash install.sh --dry-run
 ```
 
 ### 2. Hand over to an agent
@@ -112,19 +113,21 @@ Both end with a phase-gate report.
 
 ### Keeping the rules current
 
-From the project directory, with the installer of the version you want:
+From the project directory, with the `update.sh` of the version you want:
 
 ```bash
-curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash -s -- update
-#   … -- update --reconfigure     answer the questions again: add a stack, drop an agent
-#   … -- remove                   take back what was installed and is still unmodified
+curl -fsSL https://shakilnwz.github.io/specforge/update.sh | bash
+#   … | bash -s -- --reconfigure     answer the questions again: add a stack, drop an agent
+
+# take back what was installed and is still unmodified
+curl -fsSL https://shakilnwz.github.io/specforge/uninstall.sh | bash
 
 # or from a checkout of this repository
-./install.sh update --dir ~/code/my-app --from .
-./install.sh remove --dir ~/code/my-app
+./update.sh --dir ~/code/my-app --from .
+./uninstall.sh --dir ~/code/my-app
 ```
 
-`update` replaces only what is still as the kit installed it. A file you changed stays yours, and
+`update.sh` replaces only what is still as the kit installed it. A file you changed stays yours, and
 the kit's newer version is offered beside it only when the kit's version has changed too. A file you
 deleted is not restored. Agents can also be changed by editing `.ai/agents` and running
 `.ai/bin/sync-rules`.
@@ -321,9 +324,14 @@ Each concern has exactly one owning audit, so a finding is filed once and linked
 
 ```
 README.md                         This manual — stays with the kit
-.github/workflows/pages.yml       Publishes the latest release's install.sh to GitHub Pages
+.github/workflows/pages.yml       Publishes the instruction page and the latest release's three
+                                  scripts to GitHub Pages
+.github/pages/index.html          The instruction page, at https://shakilnwz.github.io/specforge/
 AGENTS.md, CLAUDE.md              Instructions for agents maintaining the kit — stay with the kit
-install.sh                        The installer: install, update, remove
+install.sh                        The installer, one script per command: adds the rules,
+update.sh                           brings them to a later release,
+uninstall.sh                        takes them back
+lib.sh                            What the three share; a release inlines it into each
 manifest                          Which template files each answer keeps, and how each is managed
 release.sh                        Checks the kit and builds one release's assets
 template/                         The ruleset — installed into a project
@@ -366,15 +374,16 @@ invariants a change must keep.
   - add `template/.ai/rules/<name>.md` with its globs;
   - add the profile's row to the payload `AGENTS.md`;
   - add a *Stack notes* row to every audit prompt;
-  - add its `profile=<name>` lines to `manifest`, and teach `install.sh` the name (`KNOWN_PROFILES`,
+  - add its `profile=<name>` lines to `manifest`, and teach `lib.sh` the name (`KNOWN_PROFILES`,
     `profile_name`) and how to detect it (`detect_apps`);
   - add the stack to [Choosing your configuration](#choosing-your-configuration).
 - **An agent:**
   - check its current documentation for where rules live and how a rule declares its files;
   - add a case to `render` in `template/.ai/bin/sync-rules`, its directory to `AGENT_DIRS` and its
     key to `KNOWN`;
-  - add the same key to `KNOWN_AGENTS` in `install.sh` (`release.sh` refuses a mismatch), its
-    directories to `AGENT_DIRS` and `TRACKED_DIRS`, and its traces to `detect_agents`;
+  - add the same key to `KNOWN_AGENTS` in `lib.sh` (`release.sh` refuses a mismatch), its name
+    and rule location to `agent_name` and `agent_rules` (the installer's menu), its directories to
+    `AGENT_DIRS` and `TRACKED_DIRS`, and its traces to `detect_agents`;
   - add its line to `template/.ai/agents`, and its row to the table above;
   - smoke-run on a scratch copy of `template/` with every agent enabled.
 - **An audit:** start from the `audit-prompt.md` template. Add it to the catalog and the ownership
@@ -384,48 +393,55 @@ invariants a change must keep.
 
 ## The installer
 
-`install.sh`, `manifest` and `release.sh`, at the root of this repository.
+`install.sh`, `update.sh`, `uninstall.sh`, the `lib.sh` they share, `manifest` and `release.sh`, at
+the root of this repository.
 
 ### Commands and options
 
-The same commands and options work either way:
+Each command is a script of its own, so none takes a command argument; the same options work either
+way:
 
 ```bash
 # from a release, in the project directory
-curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash -s -- <command> [options]
+curl -fsSL https://shakilnwz.github.io/specforge/<script> | bash -s -- [options]
 
 # from a checkout of this repository, with no download
-./install.sh <command> --dir <project> --from . [options]
+./<script> --dir <project> --from . [options]
 ```
 
-Each release's `install.sh` installs that release. The address above serves the latest one, and
-two GitHub addresses serve the same files:
+| Script | Does |
+| --- | --- |
+| `install.sh` | Adds the rules to a project that does not carry them yet; refuses one that does |
+| `update.sh` | Brings the rules to the script's version, under [the policy](#the-policy); refuses a project without them |
+| `uninstall.sh` | Takes back what was installed and is still unmodified, then the lock |
+
+Each release publishes all three, and its `install.sh` and `update.sh` install that release. The
+address above serves the latest release's scripts, and two GitHub addresses serve the same files:
 
 | Address | Serves |
 | --- | --- |
-| `https://shakilnwz.github.io/specforge/install.sh` | The latest release's installer, copied to GitHub Pages when a release is published; for up to ten minutes after, possibly still the previous one |
-| `https://github.com/shakilnwz/specforge/releases/latest/download/install.sh` | The latest release's installer, straight from GitHub Releases |
-| `https://github.com/shakilnwz/specforge/releases/download/vX.Y.Z/install.sh` | One release's installer, to pin a version |
+| `https://shakilnwz.github.io/specforge/<script>` | The latest release's script, copied to GitHub Pages when a release is published; for up to ten minutes after, possibly still the previous one |
+| `https://github.com/shakilnwz/specforge/releases/latest/download/<script>` | The latest release's script, straight from GitHub Releases |
+| `https://github.com/shakilnwz/specforge/releases/download/vX.Y.Z/<script>` | One release's script, to pin a version |
 
-Wherever the installer comes from, it downloads its release's tarball from GitHub Releases and
-verifies the published SHA-256 before unpacking it.
-
-| Command | Does |
-| --- | --- |
-| `install` | Adds the rules to a project that does not carry them yet; refuses one that does |
-| `update` | Brings the rules to the installer's version, under [the policy](#the-policy) |
-| `remove` | Takes back what was installed and is still unmodified, then the lock |
-| `help` | Prints the commands, the options and the answer keys |
+Wherever they come from, `install.sh` and `update.sh` download their release's tarball from GitHub
+Releases and verify the published SHA-256 before unpacking it. `uninstall.sh` downloads nothing: it
+works from the project's `.ai/specforge.lock`, whichever release wrote it.
 
 | Option | With | Effect |
 | --- | --- | --- |
-| `--dir DIR` | every command | The project directory; the current one by default. It must already exist |
-| `--answers FILE` | `install`, `update` | Answers as `key=value` lines, read and never run, instead of the questions. On `update`, they replace the recorded answers key by key |
-| `--yes` | `install` | Asks nothing, and takes what detection found |
-| `--reconfigure` | `update` | Asks the questions again, defaulting to the recorded answers |
-| `--dry-run` | every command | Prints what would change, and changes nothing |
-| `--version vX.Y.Z` | `install`, `update` | Installs that release instead of the installer's own |
-| `--from PATH` | `install`, `update` | Installs from a checkout or a release tarball, with no download |
+| `--dir DIR` | every script | The project directory; the current one by default. It must already exist |
+| `--answers FILE` | `install.sh`, `update.sh` | Answers as `key=value` lines, read and never run, instead of the questions. On `update.sh`, they replace the recorded answers key by key |
+| `--yes` | `install.sh` | Asks nothing, and takes what detection found |
+| `--reconfigure` | `update.sh` | Asks the questions again, defaulting to the recorded answers |
+| `--dry-run` | every script | Prints what would change, and changes nothing |
+| `--version vX.Y.Z` | `install.sh`, `update.sh` | Installs that release instead of the script's own |
+| `--from PATH` | `install.sh`, `update.sh` | Installs from a checkout or a release tarball, with no download |
+| `--help` | every script | Prints the script's options and, for `install.sh` and `update.sh`, the answer keys |
+
+A script refuses an option it does not take, and any argument that is not an option. Its questions
+are numbered menus on the terminal, in ASCII, styled unless `NO_COLOR` is set or the terminal is
+dumb; a menu takes numbers or keys, separated by spaces or commas.
 
 `SPECFORGE_BASE_URL` points the download at a mirror holding
 `<version>/specforge-<version>.tar.gz` and its `.sha256`, instead of the GitHub release.
@@ -462,7 +478,7 @@ at the confirmation; `1` when it refuses or fails; `2` on a usage error.
 
 ### The policy
 
-| File | `install` / `update` | `remove` |
+| File | `install.sh` / `update.sh` | `uninstall.sh` |
 | --- | --- | --- |
 | Absent, never installed | Write it | — |
 | Absent, but installed before | You deleted it: not restored, and remembered | — |
@@ -494,8 +510,10 @@ A new template file needs no line unless only some answers keep it.
 ### Guarantees
 
 - **Safe to pipe:**
-  - every statement lives in a function, and the only call is on the last line, so a truncated
-    download runs nothing (the tests cut the script at every 1,500 bytes);
+  - each published script stands alone: `release.sh` inlines `lib.sh` into it;
+  - every statement lives in a function, and the only call is on the last line, braced as one
+    compound command, so a truncated download runs nothing, not even a call that has lost its
+    options (the tests cut the script at every 1,500 bytes);
   - prompts read from `/dev/tty`, because stdin is the script; with no terminal and no answers, it
     refuses.
 - **Portable:** Bash 3.2 throughout, needing only `curl`, `tar` and POSIX tools; `git` only to
@@ -513,16 +531,18 @@ A new template file needs no line unless only some answers keep it.
 ./release.sh v1.0.0 --repo shakilnwz/specforge
 ```
 
-It checks the kit first. Then it builds the three release assets (the stamped `install.sh`, the
-tarball, and its checksum) and prints the `gh release create` command. It publishes nothing.
-Publishing the release runs `.github/workflows/pages.yml`, which copies the latest release's
-`install.sh` to GitHub Pages; the Pages environment accepts deployments from `master` and from
-`v*` tags. The checks:
+It checks the kit first. Then it builds the five release assets — `install.sh`, `update.sh` and
+`uninstall.sh`, each with `lib.sh` inlined and the version and repository stamped in, the tarball,
+and its checksum — and prints the `gh release create` command. It publishes nothing. Publishing the
+release runs `.github/workflows/pages.yml`, which publishes the instruction page from the release's
+tag and copies the release's three scripts beside it on GitHub Pages; the Pages environment accepts
+deployments from `master` and from `v*` tags. The checks:
 
-- every script parses;
+- every script parses; each built one parses and stands alone, with `lib.sh` inlined;
 - every manifest line names a known selector, a known mode and an existing path;
 - `template/` ships no generated agent file, no lock, no incoming file, and no enabled agent;
-- `install.sh`, `sync-rules` and the manifest agree on the agents and profiles;
+- each script reads `lib.sh` exactly once and carries no stamp; `lib.sh` carries each stamp once;
+- `lib.sh`, `sync-rules` and the manifest agree on the agents and profiles;
 - `sync-rules --check` passes on a scratch copy of `template/`.
 
 ## Origin

@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Icons: Tabler Icons, https://tabler.io/icons, inlined as raw SVG.
+     MIT License, Copyright (c) 2020-2026 Paweł Kuna. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="SpecForge: coding, spec, audit and documentation rules for AI coding agents, added to any project with one command.">
+<title>SpecForge &mdash; rules for building software with AI coding agents</title>
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --fg: #1d1c1a;
+    --muted: #6d6a63;
+    --line: #e5e1d8;
+    --code-bg: #f3f0ea;
+    --accent: #2c5d7c;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131416;
+      --fg: #e7e5e1;
+      --muted: #9b978f;
+      --line: #2a2c30;
+      --code-bg: #1b1d20;
+      --accent: #8fbbd6;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  main { max-width: 46rem; margin: 0 auto; padding: 5rem 1.5rem 3rem; }
+  header { margin-bottom: 3.5rem; }
+  .eyebrow {
+    margin: 0 0 .75rem;
+    color: var(--muted);
+    font: 500 .78rem/1 var(--mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  h1 { margin: 0; font-size: 2.6rem; line-height: 1.1; letter-spacing: -.025em; font-weight: 700; }
+  .lede { margin: 1rem 0 0; font-size: 1.2rem; color: var(--muted); max-width: 38rem; }
+  h2 {
+    margin: 3.5rem 0 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    font-size: 1.3rem;
+    letter-spacing: -.01em;
+  }
+  h2 .n { color: var(--accent); font-family: var(--mono); font-weight: 500; margin-right: .6rem; }
+  h3 { margin: 2rem 0 .5rem; font-size: 1rem; }
+  p, ul, ol { margin: 0 0 1rem; }
+  ul, ol { padding-left: 1.25rem; }
+  li { margin: .25rem 0; }
+  a { color: var(--accent); text-underline-offset: .2em; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-thickness: 2px; }
+  code { font-family: var(--mono); font-size: .88em; }
+  :not(pre) > code { background: var(--code-bg); padding: .1em .35em; border-radius: 4px; }
+  pre {
+    margin: 0 0 1rem;
+    padding: 1rem 1.15rem;
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow-x: auto;
+    line-height: 1.55;
+  }
+  pre code { font-size: .86rem; }
+  /* One click selects the whole command; the prompt sign is never copied. */
+  pre.cmd code { user-select: all; -webkit-user-select: all; }
+  pre.cmd code::before { content: "$ "; color: var(--muted); user-select: none; -webkit-user-select: none; }
+  .comment { color: var(--muted); }
+  .note { color: var(--muted); font-size: .94rem; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 1rem; font-size: .95rem; }
+  th, td { text-align: left; vertical-align: top; padding: .55rem .9rem .55rem 0; border-bottom: 1px solid var(--line); }
+  th { font-weight: 600; color: var(--muted); font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; }
+  td:first-child { white-space: nowrap; }
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0 0 1rem; }
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.15rem; }
+  .card p { margin: 0; }
+  .card .label { color: var(--muted); font-size: .85rem; margin-bottom: .35rem; display: flex; align-items: center; gap: .45rem; }
+  .card .say { font-weight: 600; }
+  .icon { width: 1.15em; height: 1.15em; flex: none; }
+  .facts { display: grid; grid-template-columns: 9rem 1fr; gap: .4rem 1.25rem; margin: 0 0 1rem; }
+  .facts dt { color: var(--muted); display: flex; align-items: center; gap: .55rem; }
+  .facts .icon, .card .icon { color: var(--accent); }
+  .facts dd { margin: 0; }
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: .9rem;
+  }
+  footer a { margin-right: 1.5rem; display: inline-flex; align-items: center; gap: .4rem; }
+  @media (max-width: 36rem) {
+    main { padding-top: 3rem; }
+    h1 { font-size: 2.1rem; }
+    .pair { grid-template-columns: 1fr; }
+    .facts { grid-template-columns: 1fr; }
+    .facts dd { margin-bottom: .6rem; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <p class="eyebrow">SpecForge</p>
+  <h1>Rules for building software with AI&nbsp;coding&nbsp;agents</h1>
+  <p class="lede">Coding, spec, audit and documentation rules, added to a project with one command:
+  a project with no code yet, or one long in production. Every coding agent gets the same rules, and
+  a check in CI enforces them.</p>
+</header>
+
+<dl class="facts">
+  <dt><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l-8 4l8 4l8 -4l-8 -4" /><path d="M4 12l8 4l8 -4" /><path d="M4 16l8 4l8 -4" /></svg>Stacks</dt>
+  <dd>Laravel, ASP.NET Core, Next.js, React and Vue, in any combination per project</dd>
+  <dt><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -4" /><path d="M12 2v2" /><path d="M9 12v9" /><path d="M15 12v9" /><path d="M5 16l4 -2" /><path d="M15 14l4 2" /><path d="M9 18h6" /><path d="M10 8v.01" /><path d="M14 8v.01" /></svg>Agents</dt>
+  <dd>Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Antigravity, Gemini CLI and Kiro</dd>
+  <dt><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l3 3l-3 3" /><path d="M13 15l3 0" /><path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2l0 -12" /></svg>Needs</dt>
+  <dd>Bash 3.2 or later, <code>curl</code>, <code>tar</code> and POSIX tools. Git is optional.</dd>
+</dl>
+
+<h2><span class="n">1</span>Install</h2>
+<p>From the project directory, new or existing:</p>
+<pre class="cmd"><code>curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash</code></pre>
+<p>The installer first detects the project's apps and their stacks, the coding agents already set
+up and the code host. It then asks five questions, each defaulting to what it found. It installs the
+rules your answers select, generates each chosen agent's rule files, and records what it did in
+<code>.ai/specforge.lock</code>.</p>
+<p>It never overwrites a file the project already has: the kit's version is written beside it as
+<code>&lt;file&gt;.specforge-incoming</code>. It never creates application code, CI or a README, and
+it never commits.</p>
+
+<h3>Read it before you run it</h3>
+<pre><code>curl -fsSLo install.sh https://shakilnwz.github.io/specforge/install.sh
+less install.sh
+bash install.sh --dry-run</code></pre>
+
+<h3>Without questions</h3>
+<p>For CI, or for a second project with the same architecture:</p>
+<pre><code>cat &gt; rules.answers &lt;&lt;'EOF'
+state=existing
+app=. laravel
+app=resources/js vue
+agents=claude cursor
+gherkin=no
+host=github
+EOF
+curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash -s -- --answers rules.answers</code></pre>
+<p class="note">A project's <code>.ai/specforge.lock</code> is itself a valid answers file.</p>
+
+<h2><span class="n">2</span>Hand over to an agent</h2>
+<p>Open the project in any of your agents and say one of these:</p>
+<div class="pair">
+  <div class="card">
+    <p class="label"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3" /><path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3" /><path d="M12 20l0 -10" /></svg>The project has no code yet</p>
+    <p class="say">Run the bootstrap prompt.</p>
+  </div>
+  <div class="card">
+    <p class="label"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8l-4 4l4 4" /><path d="M17 8l4 4l-4 4" /><path d="M14 4l-4 16" /></svg>The project already has code</p>
+    <p class="say">Run the adopt prompt.</p>
+  </div>
+</div>
+<p><strong>Bootstrap</strong> asks for the product, the stacks, the shape of the system and your
+constraints, and drafts the first decisions. <strong>Adopt</strong> reads the code first, records
+what exists, runs baseline audits and asks only what the code cannot settle. Both end with a
+phase-gate report.</p>
+
+<h2><span class="n">3</span>Switch on enforcement</h2>
+<ul>
+  <li>Accept or amend the proposed ADRs, and set the <strong>Phase</strong> line in
+    <code>AGENTS.md</code> from the gate report.</li>
+  <li>Add <code>.ai/bin/check</code> to CI, beside each app's lint, type check and tests.</li>
+  <li>Commit the rules together with <code>.ai/specforge.lock</code>.</li>
+</ul>
+
+<h2><span class="n">4</span>Keep the rules current</h2>
+<p>Bring the rules to the latest release. Only files still as the kit installed them are replaced;
+a file you changed stays yours.</p>
+<pre class="cmd"><code>curl -fsSL https://shakilnwz.github.io/specforge/update.sh | bash</code></pre>
+<p>Answer the questions again, to add a stack or change the agents:</p>
+<pre class="cmd"><code>curl -fsSL https://shakilnwz.github.io/specforge/update.sh | bash -s -- --reconfigure</code></pre>
+<p>Take the rules back out. Every file still unmodified is removed; a file you changed is kept:</p>
+<pre class="cmd"><code>curl -fsSL https://shakilnwz.github.io/specforge/uninstall.sh | bash</code></pre>
+
+<h2><span class="n">5</span>Options</h2>
+<p>Options follow <code>bash -s --</code> when a script is piped, and each script lists its own with
+<code>--help</code>.</p>
+<table>
+  <thead><tr><th>Option</th><th>Scripts</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td><code>--dir DIR</code></td><td>all</td><td>The project directory; the current one by default</td></tr>
+    <tr><td><code>--dry-run</code></td><td>all</td><td>Print what would change, and change nothing</td></tr>
+    <tr><td><code>--answers FILE</code></td><td>install, update</td><td>Take the answers from a file instead of asking</td></tr>
+    <tr><td><code>--yes</code></td><td>install</td><td>Ask nothing; take what detection found</td></tr>
+    <tr><td><code>--reconfigure</code></td><td>update</td><td>Ask the questions again</td></tr>
+    <tr><td><code>--version vX.Y.Z</code></td><td>install, update</td><td>Use that release instead of the script's own</td></tr>
+  </tbody>
+</table>
+<p class="note">To pin a release, take its scripts from
+<code>https://github.com/shakilnwz/specforge/releases/download/vX.Y.Z/install.sh</code>, and likewise
+<code>update.sh</code> and <code>uninstall.sh</code>.</p>
+
+<footer>
+  <a href="https://github.com/shakilnwz/specforge#readme"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12" /><path d="M19 16h-12a2 2 0 0 0 -2 2" /><path d="M9 8h6" /></svg>The manual</a>
+  <a href="https://github.com/shakilnwz/specforge/releases"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 7.5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M3 6v5.172a2 2 0 0 0 .586 1.414l7.71 7.71a2.41 2.41 0 0 0 3.408 0l5.592 -5.592a2.41 2.41 0 0 0 0 -3.408l-7.71 -7.71a2 2 0 0 0 -1.414 -.586h-5.172a3 3 0 0 0 -3 3" /></svg>Releases</a>
+  <a href="https://github.com/shakilnwz/specforge"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" /></svg>Source</a>
+</footer>
+
+</main>
+</body>
+</html>

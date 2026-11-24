@@ -1,10 +1,11 @@
-# Publishes the latest release's install.sh to GitHub Pages, so that
+# Publishes to GitHub Pages the instruction page, .github/pages/index.html, at
+# https://shakilnwz.github.io/specforge/, and the latest release's three scripts beside it, so that
 #
-#   curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash -s -- install
+#   curl -fsSL https://shakilnwz.github.io/specforge/install.sh | bash
 #
-# serves the same file as https://github.com/shakilnwz/specforge/releases/latest/download/install.sh.
-# Only the installer is published: it downloads its release's tarball from GitHub Releases and
-# verifies the checksum there.
+# serves the same file as https://github.com/shakilnwz/specforge/releases/latest/download/install.sh,
+# and likewise update.sh and uninstall.sh. Only the page and the scripts are published: install.sh
+# and update.sh download their release's tarball from GitHub Releases and verify the checksum there.
 #
 # Runs when a release is published, and by hand (Actions → Publish installer → Run workflow) to
 # redeploy. It belongs to the kit's repository and is never part of template/.
@@ -30,17 +31,27 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}install.sh
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Fetch the latest release's installer
+      - name: Check out the instruction page
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/pages
+
+      - name: Fetch the latest release's scripts
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir site
-          gh release download --repo "$GITHUB_REPOSITORY" --pattern install.sh --dir site
-          # The stamped installer, not an unreleased checkout's copy
-          grep -qx "SPECFORGE_REPO='$GITHUB_REPOSITORY'" site/install.sh
-          bash -n site/install.sh
+          gh release download --repo "$GITHUB_REPOSITORY" --dir site \
+            --pattern install.sh --pattern update.sh --pattern uninstall.sh
+          for script in install.sh update.sh uninstall.sh; do
+            # A release build, lib.sh inlined and stamped, not an unreleased checkout's copy
+            grep -qx "SPECFORGE_REPO='$GITHUB_REPOSITORY'" "site/$script"
+            bash -n "site/$script"
+          done
+          cp .github/pages/index.html site/index.html
 
       - name: Package the site
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

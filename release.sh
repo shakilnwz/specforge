@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 #
-# release.sh: check the kit, then build one release's three assets. It publishes nothing.
+# release.sh: check the kit, then build one release's five assets. It publishes nothing.
 #
 #   ./release.sh v1.2.0 --repo <org>/specforge [--out DIR]
 #
 # Assets, in DIR (a new temporary directory by default):
-#   install.sh                         the installer, its version and repository stamped in
+#   install.sh, update.sh, uninstall.sh
+#                                      each with lib.sh inlined in place of the line that reads
+#                                      it, and the version and repository stamped in: each stands
+#                                      alone, to be piped from curl
 #   specforge-<version>.tar.gz         template/, manifest and VERSION under specforge-<version>/
 #   specforge-<version>.tar.gz.sha256  "<sha256>  specforge-<version>.tar.gz"
 #
@@ -13,12 +16,16 @@
 #   every script parses; every manifest line names a known selector and mode and an existing path;
 #   template/ carries no generated agent file, no lock, no incoming file, and no agent enabled;
 #   .ai/bin/sync-rules --check passes on a scratch copy of template/ (Boost-identical index);
-#   install.sh carries each stamp exactly once, and knows the agents sync-rules knows and the
-#   profiles the manifest selects.
+#   each of the three scripts reads lib.sh exactly once and carries no stamp; lib.sh carries each
+#   stamp exactly once, and knows the agents sync-rules knows and the profiles the manifest selects.
 #
 # Portable: bash 3.2 or later and POSIX tools. No git, no network.
 
 set -u
+
+SCRIPTS='install.sh update.sh uninstall.sh'
+# The one line by which each script reads lib.sh from a checkout; a release inlines lib.sh there.
+LIB_LINE='. "$(dirname "$0")/lib.sh" || exit 1'
 
 die() { printf 'release: %s\n' "$*" >&2; exit 1; }
 problem() { printf 'release: %s\n' "$*" >&2; problems=$((problems + 1)); }
@@ -33,7 +40,7 @@ hash_file() {
 check_kit() {
     problems=0
 
-    for f in install.sh release.sh template/.ai/bin/*; do
+    for f in $SCRIPTS lib.sh release.sh template/.ai/bin/*; do
         bash -n "$f" 2>/dev/null || problem "$f does not parse"
     done
 
@@ -68,18 +75,23 @@ check_kit() {
     enabled=$(awk '!/^[[:space:]]*#/ && NF' template/.ai/agents)
     [ -z "$enabled" ] || problem "template/.ai/agents enables an agent: $enabled (ship them all commented out)"
 
-    agents_ins=$(sed -n "s/^KNOWN_AGENTS='\(.*\)'$/\1/p" install.sh)
+    agents_ins=$(sed -n "s/^KNOWN_AGENTS='\(.*\)'$/\1/p" lib.sh)
     agents_sync=$(sed -n "s/^KNOWN='\(.*\)'$/\1/p" template/.ai/bin/sync-rules)
     [ -n "$agents_ins" ] && [ "$agents_ins" = "$agents_sync" ] ||
-        problem "install.sh KNOWN_AGENTS ($agents_ins) differs from sync-rules KNOWN ($agents_sync)"
-    profiles_ins=$(sed -n "s/^KNOWN_PROFILES='\(.*\)'$/\1/p" install.sh | tr ' ' '\n' | LC_ALL=C sort | tr '\n' ' ')
+        problem "lib.sh KNOWN_AGENTS ($agents_ins) differs from sync-rules KNOWN ($agents_sync)"
+    profiles_ins=$(sed -n "s/^KNOWN_PROFILES='\(.*\)'$/\1/p" lib.sh | tr ' ' '\n' | LC_ALL=C sort | tr '\n' ' ')
     profiles_man=$(sed -n 's/^profile=\([a-z]*\) .*/\1/p' manifest | LC_ALL=C sort -u | tr '\n' ' ')
     [ "$profiles_ins" = "$profiles_man" ] ||
-        problem "install.sh KNOWN_PROFILES ($profiles_ins) differs from the manifest's profiles ($profiles_man)"
+        problem "lib.sh KNOWN_PROFILES ($profiles_ins) differs from the manifest's profiles ($profiles_man)"
 
     for token in '@SPECFORGE_VERSION@' '@SPECFORGE_REPO@'; do
-        n=$(grep -cF "$token" install.sh)
-        [ "$n" = 1 ] || problem "install.sh carries $token $n times, not once"
+        n=$(grep -cF "$token" lib.sh)
+        [ "$n" = 1 ] || problem "lib.sh carries $token $n times, not once"
+    done
+    for s in $SCRIPTS; do
+        n=$(grep -cxF "$LIB_LINE" "$s")
+        [ "$n" = 1 ] || problem "$s reads lib.sh $n times, not once, by the line: $LIB_LINE"
+        if grep -qF '@SPECFORGE_' "$s"; then problem "$s carries a stamp: stamps live in lib.sh"; fi
     done
 
     scratch=$(mktemp -d "${TMPDIR:-/tmp}/specforge-release.XXXXXX") || die 'cannot create a temporary directory'
@@ -103,8 +115,22 @@ build() {
     printf '%s\n' "$version" > "$stage/$name/VERSION"
     (cd "$stage" && tar -czf "$out/$name.tar.gz" "$name") || die 'cannot build the tarball'
     printf '%s  %s\n' "$(hash_file "$out/$name.tar.gz")" "$name.tar.gz" > "$out/$name.tar.gz.sha256"
-    sed -e "s|@SPECFORGE_VERSION@|$version|" -e "s|@SPECFORGE_REPO@|$repo|" install.sh > "$out/install.sh"
-    chmod 755 "$out/install.sh"
+    for s in $SCRIPTS; do
+        bundle "$s" > "$out/$s" || die "cannot build $s"
+        chmod 755 "$out/$s"
+        bash -n "$out/$s" 2>/dev/null || die "the built $s does not parse"
+        # Inlined and stamped: the repository line comes only from lib.sh, the read line only from $s
+        grep -qx "SPECFORGE_REPO='$repo'" "$out/$s" && ! grep -qxF "$LIB_LINE" "$out/$s" ||
+            die "the built $s does not stand alone: lib.sh was not inlined"
+    done
+}
+
+bundle() {
+    # bundle <script>: the script with lib.sh in place of the line that reads it, stamped.
+    awk -v lib=lib.sh -v line="$LIB_LINE" '
+        $0 == line { while ((getline l < lib) > 0) print l; close(lib); next }
+        { print }' "$1" |
+        sed -e "s|@SPECFORGE_VERSION@|$version|" -e "s|@SPECFORGE_REPO@|$repo|"
 }
 
 main() {
@@ -126,7 +152,7 @@ main() {
     case $version in *[!v0-9.]*) die "not a version: $version" ;; esac
     case $repo in
         */*) ;;
-        *) die '--repo <org>/specforge is required: it is stamped into install.sh' ;;
+        *) die '--repo <org>/specforge is required: it is stamped into the scripts' ;;
     esac
     case $repo in *[!A-Za-z0-9._/-]* | */*/* ) die "not a repository: $repo" ;; esac
 
@@ -142,10 +168,10 @@ main() {
     build
 
     printf 'Built SpecForge %s in %s\n' "$version" "$out"
-    (cd "$out" && ls -l install.sh "specforge-$version.tar.gz" "specforge-$version.tar.gz.sha256")
+    (cd "$out" && ls -l $SCRIPTS "specforge-$version.tar.gz" "specforge-$version.tar.gz.sha256")
     printf '\nPublish, after reviewing them:\n'
-    printf '  gh release create %s %s/install.sh %s/specforge-%s.tar.gz %s/specforge-%s.tar.gz.sha256 --repo %s --title "SpecForge %s"\n' \
-        "$version" "$out" "$out" "$version" "$out" "$version" "$repo" "$version"
+    printf '  gh release create %s %s/install.sh %s/update.sh %s/uninstall.sh %s/specforge-%s.tar.gz %s/specforge-%s.tar.gz.sha256 --repo %s --title "SpecForge %s"\n' \
+        "$version" "$out" "$out" "$out" "$out" "$version" "$out" "$version" "$repo" "$version"
 }
 
 main "$@"

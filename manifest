@@ -1,4 +1,4 @@
-# SpecForge manifest — read by install.sh, checked by release.sh.
+# SpecForge manifest — read by install.sh and update.sh (through lib.sh), checked by release.sh.
 #
 # Every file under template/ is installed, as an ordinary file, unless a line below says otherwise.
 #
