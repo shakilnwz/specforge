@@ -44,17 +44,21 @@ check_kit() {
         bash -n "$f" 2>/dev/null || problem "$f does not parse"
     done
 
+    profiles_ins=$(sed -n "s/^KNOWN_PROFILES='\(.*\)'$/\1/p" lib.sh)
+    [ -n "$profiles_ins" ] || problem 'lib.sh KNOWN_PROFILES is missing'
+
     while read -r sel path mode extra; do
         case $sel in '' | '#'*) continue ;; esac
         if [ "$sel" = implies ]; then
             for p in "$path" "$mode"; do
-                case " laravel dotnet nextjs react vue " in *" $p "*) ;; *) problem "manifest: unknown profile '$p'" ;; esac
+                case " $profiles_ins " in *" $p "*) ;; *) problem "manifest: unknown profile '$p'" ;; esac
             done
             continue
         fi
         case $sel in
-            always | profile=laravel | profile=dotnet | profile=nextjs | profile=react | profile=vue | \
-            gherkin=yes | gherkin=no | host=github | host=other) ;;
+            always | gherkin=yes | gherkin=no | host=github | host=other) ;;
+            profile=*)
+                case " $profiles_ins " in *" ${sel#profile=} "*) ;; *) problem "manifest: unknown selector '$sel'" ;; esac ;;
             *) problem "manifest: unknown selector '$sel'" ;;
         esac
         case ${mode:-file} in file | block | seed | generated) ;; *) problem "manifest: unknown mode '$mode'" ;; esac
@@ -79,10 +83,10 @@ check_kit() {
     agents_sync=$(sed -n "s/^KNOWN='\(.*\)'$/\1/p" template/.ai/bin/sync-rules)
     [ -n "$agents_ins" ] && [ "$agents_ins" = "$agents_sync" ] ||
         problem "lib.sh KNOWN_AGENTS ($agents_ins) differs from sync-rules KNOWN ($agents_sync)"
-    profiles_ins=$(sed -n "s/^KNOWN_PROFILES='\(.*\)'$/\1/p" lib.sh | tr ' ' '\n' | LC_ALL=C sort | tr '\n' ' ')
+    profiles_ins_sorted=$(printf '%s\n' "$profiles_ins" | tr ' ' '\n' | LC_ALL=C sort | tr '\n' ' ')
     profiles_man=$(sed -n 's/^profile=\([a-z]*\) .*/\1/p' manifest | LC_ALL=C sort -u | tr '\n' ' ')
-    [ "$profiles_ins" = "$profiles_man" ] ||
-        problem "lib.sh KNOWN_PROFILES ($profiles_ins) differs from the manifest's profiles ($profiles_man)"
+    [ "$profiles_ins_sorted" = "$profiles_man" ] ||
+        problem "lib.sh KNOWN_PROFILES ($profiles_ins_sorted) differs from the manifest's profiles ($profiles_man)"
 
     for token in '@SPECFORGE_VERSION@' '@SPECFORGE_REPO@'; do
         n=$(grep -cF "$token" lib.sh)
@@ -95,12 +99,40 @@ check_kit() {
     done
 
     scratch=$(mktemp -d "${TMPDIR:-/tmp}/specforge-release.XXXXXX") || die 'cannot create a temporary directory'
+    trap 'rm -rf "$scratch"' EXIT INT TERM
     cp -Rp template/. "$scratch/"
     if ! sync_out=$("$scratch/.ai/bin/sync-rules" --check 2>&1); then
         problem "sync-rules --check fails on template/:"
         printf '%s\n' "$sync_out" | sed 's/^/    /' >&2
     fi
+    awk '/^# [a-z]+$/ { print substr($0, 3); next } { print }' "$scratch/.ai/agents" > "$scratch/.ai/agents.all" &&
+        mv "$scratch/.ai/agents.all" "$scratch/.ai/agents"
+    if ! sync_out=$("$scratch/.ai/bin/sync-rules" 2>&1); then
+        problem "sync-rules with all agents enabled fails on template/:"
+        printf '%s\n' "$sync_out" | sed 's/^/    /' >&2
+    elif ! check_out=$("$scratch/.ai/bin/check" 2>&1); then
+        problem ".ai/bin/check fails on scratch template/ with all agents enabled:"
+        printf '%s\n' "$check_out" | sed 's/^/    /' >&2
+    else
+        awk '
+            in_c { if (index($0, "-->") > 0) in_c = 0; next }
+            /<!-- bootstrap:/ {
+                rest = substr($0, index($0, "<!-- bootstrap:"))
+                if (index(rest, "-->") == 0) in_c = 1
+                next
+            }
+            { print }' "$scratch/AGENTS.md" |
+            sed 's/^\*\*Phase 0 — Bootstrap\.\*\*/**Phase 1 — Foundation.**/' > "$scratch/AGENTS.md.p1" &&
+            mv "$scratch/AGENTS.md.p1" "$scratch/AGENTS.md"
+        awk '!/<!-- bootstrap:/' "$scratch/docs/audit/readiness.md" > "$scratch/docs/audit/readiness.md.p1" &&
+            mv "$scratch/docs/audit/readiness.md.p1" "$scratch/docs/audit/readiness.md"
+        if ! check_out=$("$scratch/.ai/bin/check" 2>&1); then
+            problem ".ai/bin/check fails in Phase 1 on scratch template/:"
+            printf '%s\n' "$check_out" | sed 's/^/    /' >&2
+        fi
+    fi
     rm -rf "$scratch"
+    trap - EXIT INT TERM
 
     [ "$problems" = 0 ] || die "$problems problem(s): nothing was built"
 }
@@ -149,7 +181,7 @@ main() {
         v[0-9]*.[0-9]*.[0-9]*) ;;
         *) die 'usage: ./release.sh vX.Y.Z --repo <org>/specforge [--out DIR]' ;;
     esac
-    case $version in *[!v0-9.]*) die "not a version: $version" ;; esac
+    case $version in *[!v0-9A-Za-z.-]* | *..* | *.) die "not a version: $version" ;; esac
     case $repo in
         */*) ;;
         *) die '--repo <org>/specforge is required: it is stamped into the scripts' ;;

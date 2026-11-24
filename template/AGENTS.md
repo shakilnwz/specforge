@@ -1,7 +1,3 @@
-### Important
-No need to lint and test unless asked. Say so in the hand-off when a change was not verified.
-Talk to me in advanced and sophisticated language of the software engineering domain or industry.
-
 <!--
   Bootstrap: every "bootstrap:" marker below is filled when these rules are installed into a
   project, and the marker removed. Until then the section is a placeholder, not a fact.
@@ -66,8 +62,7 @@ When two sources disagree, the higher one wins and the lower one is a defect to 
    and their `features/` scenarios — for the behaviour they require. A spec that needs a convention
    broken is a defect in the spec until an ADR changes the convention.
 5. Generated framework guidelines (Laravel Boost's `<laravel-boost-guidelines>` block and its
-   `.ai/rules/boost/`) — they describe the framework, not this project, and yield to 1–4. Where
-   they conflict with the line under **Important** above, the line above wins.
+   `.ai/rules/boost/`) — they describe the framework, not this project, and yield to 1–4.
 6. Existing code. Sibling files show the local shape; they are evidence, not authority.
 
 Descriptive documents (`architecture/`, `reference/`, `workflows/`) never override a normative
@@ -112,7 +107,7 @@ Stack profiles realise the core conventions per stack; the **Stacks** table bind
 
 | Profile | Realises the core for |
 | --- | --- |
-| [`stack-laravel.md`](docs/conventions/stack-laravel.md) | Laravel: modules, routes and surfaces, DataTables lists, models, PHP idiom, Pest |
+| [`stack-laravel.md`](docs/conventions/stack-laravel.md) | Laravel: modules, routes and surfaces, paginated lists, models, PHP idiom, Pest |
 | [`stack-dotnet.md`](docs/conventions/stack-dotnet.md) | ASP.NET Core: solution layout, module visibility, minimal APIs, EF Core, C# idiom, xUnit |
 | [`stack-nextjs.md`](docs/conventions/stack-nextjs.md) | Next.js App Router, on top of the React profile: full-stack or frontend mode, server/client boundary, server actions, caching |
 | [`stack-react.md`](docs/conventions/stack-react.md) | React SPAs, and the base of the Next.js profile: the feature tree, pages and their partials, hooks and effects, server state in TanStack Query |

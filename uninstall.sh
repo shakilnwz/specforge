@@ -59,8 +59,10 @@ cmd_uninstall() {
             block)
                 p=$c
                 dest="$TARGET/$p"
-                [ -f "$dest" ] || continue
-                if [ "$b" != - ] && [ "$(hash_file "$dest")" = "$b" ]; then
+                [ -e "$dest" ] || [ -L "$dest" ] || continue
+                if [ -L "$dest" ] || [ ! -f "$dest" ]; then
+                    note left "$p"
+                elif [ "$b" != - ] && [ "$(hash_file "$dest")" = "$b" ]; then
                     drop "$dest"
                     note removed "$p"
                 elif extract_block "$dest" > "$WORK/block.cur" && [ "$(hash_file "$WORK/block.cur")" = "$a" ]; then

@@ -45,9 +45,10 @@ convention-conforming one — and why.
 3. **Forks.** Files at the same relative path across apps or modules: identical (md5), near-identical
    (whitespace-normalised similarity ≥ 85%), or forked API-incompatibly. A fork grows more expensive
    to merge with every commit.
-4. **Asymmetric hardening.** For each security- or reliability-relevant fix in `git log` (secrets
-   handling, middleware, transaction boundaries, after-commit dispatch, throttling, validation),
-   check whether every sibling received it.
+4. **Asymmetric hardening.** When under version control, check `git log` for security- or
+   reliability-relevant fixes (secrets handling, middleware, transaction boundaries, after-commit
+   dispatch, throttling, validation) and verify whether every sibling received them; without git,
+   compare siblings directly across these controls.
 5. **Shape discrepancies.** For each entity exposed by more than one endpoint, app or surface,
    compare the response shapes, field names, casing and error formats.
 6. **Surface asymmetries.** For each capability present on more than one surface or for more than

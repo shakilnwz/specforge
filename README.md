@@ -231,7 +231,7 @@ Always kept:
 
 The core conventions use one vocabulary — entry point, Command, Action, Query, Model, Response,
 surface, module — and state each rule once. A profile maps that vocabulary onto a stack:
-- Laravel: a FormRequest and a Spatie Data object;
+- Laravel: a `FormRequest` and a readonly Command DTO;
 - .NET: a `sealed record` handled by an `internal` handler;
 - Next.js: a Zod schema behind a surface-wrapped server action.
 
@@ -371,11 +371,13 @@ invariants a change must keep.
 - **A stack:**
   - write `template/docs/conventions/stack-<name>.md` from the `convention.md` template, mapping
     every row of the core concepts table;
-  - add `template/.ai/rules/<name>.md` with its globs;
+  - add `template/.ai/rules/<name>.md` with its globs (and regenerate `template/.ai/rules/index.md`
+    from a scratch copy);
   - add the profile's row to the payload `AGENTS.md`;
   - add a *Stack notes* row to every audit prompt;
   - add its `profile=<name>` lines to `manifest`, and teach `lib.sh` the name (`KNOWN_PROFILES`,
-    `profile_name`) and how to detect it (`detect_apps`);
+    `profile_name`) and how to detect it (`detect_apps`) — `release.sh` derives known profiles from
+    `lib.sh`;
   - add the stack to [Choosing your configuration](#choosing-your-configuration).
 - **An agent:**
   - check its current documentation for where rules live and how a rule declares its files;
@@ -488,7 +490,8 @@ at the confirmation; `1` when it refuses or fails; `2` on a usage error.
 | No longer selected (dropped by the kit, or its profile deselected) | Delete it if unchanged; otherwise keep it and report it | — |
 | `AGENTS.md`, `CLAUDE.md` | The rows above, applied only to the text between `<!-- specforge:begin -->` and `<!-- specforge:end -->`; an existing file gets the block appended | Take the block out; delete the file only if the kit created it and it is unchanged |
 | `.ai/agents` | Written once, then the project's | Delete it if unchanged |
-| `.ai/rules/index.md`, the agents' rule files | Written by `.ai/bin/sync-rules` | Deleted; generated files carry its marker |
+| `.ai/rules/index.md`, `.gemini/settings.json` | Written by `.ai/bin/sync-rules` | Delete if unmodified since recorded in `.ai/specforge.lock`; keep if changed |
+| Agent `ai-*` rule files | Written by `.ai/bin/sync-rules` | Deleted; generated files carry its marker |
 | README, ignore files, CI, anything outside the payload | Never touched | — |
 
 `.ai/bin/check` warns, without failing, while a `*.specforge-incoming` file awaits reconciliation.

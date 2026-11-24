@@ -94,7 +94,7 @@ Excluded from every verdict: implementation choices the spec rightly leaves to t
 | .NET | Entry points from the OpenAPI document and `Map*` calls; tags are `[Trait("Requirement", …)]` |
 | Next.js | Entry points are every exported server action, every `route.ts`, every `page.tsx`; tags are `[NNNN.Rn]` title prefixes and Playwright `@NNNN.Rn` tags |
 | React | Form options and visible actions in pages map to requirements like any entry point; tags are `[NNNN.Rn]` title prefixes and Playwright `@NNNN.Rn` tags |
-| Vue | Form options and visible actions in views map to requirements like any entry point |
+| Vue | Form options and visible actions in views map to requirements like any entry point; tags are `[NNNN.Rn]` title prefixes and Playwright `@NNNN.Rn` tags |
 
 ## Output
 

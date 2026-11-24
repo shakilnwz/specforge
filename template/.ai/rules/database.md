@@ -2,6 +2,9 @@
 paths:
   - '**/Migrations/**'
   - '**/migrations/**'
+  - 'apps/*/database/**'
+  - 'apps/*/drizzle/**'
+  - 'apps/*/prisma/**'
   - 'database/**'
   - 'drizzle/**'
   - 'modules/**/database/**'
@@ -17,7 +20,7 @@ The **Database** section of `docs/conventions/coding.md`, the money and concurre
 
 ## Never edit a migration that has run outside your machine
 Add a new migration instead. An edited migration silently desynchronises every existing database;
-check `git log` on the file — if it has been pushed, it has run somewhere.
+when under version control, check `git log` on the file — if it has been pushed, it has run somewhere.
 
 ## Inspect before writing
 Read the live schema first (Boost's `database-schema`, `information_schema`, or the ORM's

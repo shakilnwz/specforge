@@ -106,12 +106,9 @@ and that declaration is the whole of what a surface means.
 - **One file per resource**, named after the URL segment it serves. A satellite endpoint stays in
   its owner's file.
 
-The surface declaration is the project's to fill, one row per surface, and is kept here as the
-record:
-
-| App | Surface | Host / prefix | Authentication | Declared in |
-| --- | --- | --- | --- | --- |
-| <!-- bootstrap: `apps/api` --> | <!-- admin --> | <!-- `/api/admin` --> | <!-- admin session, active admin --> | <!-- the profile's declaration point --> |
+Each project records its declared surfaces — one row per surface with columns `App`, `Surface`,
+`Host / prefix`, `Authentication`, and `Declared in` — in `docs/architecture/surfaces.md` (keeping
+this normative convention unmodified).
 
 An arch test fails an entry point that sets any part of its surface itself. The test lands with the
 first surface, not after the first violation.

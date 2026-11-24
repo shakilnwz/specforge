@@ -169,9 +169,16 @@ the owner's finding rather than re-describing it.
 | The same concern done different ways across modules, apps or surfaces | Consistency |
 | A name that breaks the glossary, a naming rule or the language idiom | Naming |
 | Structure more complicated than the behaviour needs | Simplification |
-| Code nothing reaches | Dead code |
-| Branching and size, measured | Complexity |
+| Code nothing reaches | Dead code and weight |
+| Branching and size, measured | Complexity and size |
 | A descriptive document untrue of the code | Documentation drift |
+| Vulnerable, out-of-support, unused or unpinned dependencies and CI/image supply chain | Dependencies |
+| Production deploy routing, workers, schedules, failure sinks, backups and observability | Operations |
+| Schema, migration history, keys, indexes and ORM parity | Database schema |
+| Frontend structure, localisation, accessibility, client safety and duplication | Frontend |
+| Missing requirement tags, untested entry points, replay guards and suite trustworthiness | Test coverage |
+| Asymptotic growth on money, read, background or bundle paths | Performance |
+| Gate criterion satisfaction, audit freshness and readiness tracking | Phase gate |
 
 ## Catalog
 

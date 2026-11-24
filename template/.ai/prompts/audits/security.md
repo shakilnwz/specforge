@@ -65,8 +65,8 @@ silently void. A rule broken only on an unreachable path is a Low hardening note
 - [ ] Auth endpoints throttled; password and 2FA changes invalidate other sessions; cookie flags.
 - [ ] Tokens scoped per subject and purpose, single use, expiring, constant-time compared.
 - [ ] Uploads validated by content, size-capped, stored privately, served through authorization.
-- [ ] No secret in the repository or its history (`git log -p -S` for key prefixes); `.env`
-      ignored; seeders create no usable credential.
+- [ ] No secret in the repository or its history (`git log -p -S` for key prefixes when under version
+      control); `.env` ignored; seeders create no usable credential.
 - [ ] CSRF exemptions each backed by an ADR.
 - [ ] Error pages and logs leak no stack traces, secrets or personal data in production config.
 - [ ] Dependency advisories: open advisories affecting reachable code (from the dependencies audit).

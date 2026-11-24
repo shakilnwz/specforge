@@ -47,7 +47,7 @@ Status — ✅ Met · ⚠️ Waived (reason on row) · ❌ Not met.
 
 | ID | Criterion | Status | Evidence / blocking reason |
 | --- | --- | --- | --- |
-| G1.1 | Surfaces declared; surface table filled | ❌ Not met | — |
+| G1.1 | Surfaces declared; `docs/architecture/surfaces.md` filled | ❌ Not met | — |
 | G1.2 | Modules exist; graph enforced by tooling | ❌ Not met | — |
 | G1.3 | Arch tests enforce mechanical conventions | ❌ Not met | — |
 | G1.4 | Authentication and authorization specified, Implemented, deny by default | ❌ Not met | — |

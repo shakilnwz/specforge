@@ -33,8 +33,8 @@ at adoption, every gate, to find the highest one whose criteria all hold.
 
 A criterion is **met** when its condition can be shown at HEAD and the evidence is named: a path,
 a passing check, a report. "Probably true" is not met. A required audit is **fresh** when its latest
-run is no older than the last commit touching its scope (`git log -1 --format=%h -- <scope>`
-compared with the report's commit).
+run is no older than the last change touching its scope (under git, compare
+`git log -1 --format=%h -- <scope>` with the report's pinned commit; without git, compare timestamps).
 
 ## Method
 

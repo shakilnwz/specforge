@@ -22,8 +22,8 @@ in place and add new findings with new IDs.
 
 ## Scope
 
-- **Default:** every module's `app/`, `routes/`, `config/`, `database/`; app-level `bootstrap/`,
-  `config/`, `routes/`; every SPA and server-rendered template.
+- **Default:** every module's entry points, Actions, Queries, Models, configuration and migrations;
+  each app's composition root and routing; every SPA and server-rendered template.
 - **Excluded:** convention and layering drift (architecture-conformance audit), naming, missing
   tests (test-coverage audit), and risks with no reachable trigger — those are listed as risks, if
   at all.

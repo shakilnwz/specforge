@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ubuntu-bash5
+            runs-on: ubuntu-latest
+            container: ''
+          - name: bash32-busybox
+            runs-on: ubuntu-latest
+            container: bash:3.2
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runs-on }}
+    container: ${{ matrix.container || null }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Build release assets and verify kit
+        run: |
+          rm -rf /tmp/sf-ci
+          ./release.sh v0.0.0-ci --repo shakilnwz/specforge --out /tmp/sf-ci
+
+      - name: Smoke-test install, reconfigure update, check, uninstall, and truncated download
+        run: |
+          set -eu
+          work=$(mktemp -d "${TMPDIR:-/tmp}/sf-smoke.XXXXXX")
+          trap 'rm -rf "$work"' EXIT
+
+          # 1. Install into a fresh project
+          proj="$work/proj"
+          mkdir -p "$proj"
+          cat > "$work/a1" <<'EOF'
+          state=new
+          app=. laravel
+          app=resources/js vue
+          agents=claude cursor
+          gherkin=no
+          host=github
+          EOF
+          /tmp/sf-ci/install.sh --dir "$proj" --from "/tmp/sf-ci/specforge-v0.0.0-ci.tar.gz" --answers "$work/a1"
+          test -f "$proj/.claude/rules/ai-general.md"
+          test -f "$proj/.cursor/rules/ai-general.mdc"
+          "$proj/.ai/bin/check"
+
+          # 2. Update with changed agents via --answers
+          cat > "$work/a2" <<'EOF'
+          agents=codex antigravity
+          EOF
+          /tmp/sf-ci/update.sh --dir "$proj" --from "/tmp/sf-ci/specforge-v0.0.0-ci.tar.gz" --answers "$work/a2"
+          test ! -e "$proj/.claude/rules/ai-general.md"
+          test ! -e "$proj/.cursor/rules/ai-general.mdc"
+          test -f "$proj/.agents/rules/ai-general.md"
+          grep -qx 'antigravity' "$proj/.ai/agents"
+          "$proj/.ai/bin/check"
+
+          # 3. Advance to Phase 1 and verify check_markers passes with placeholders cleared
+          awk '
+            in_c { if (index($0, "-->") > 0) in_c = 0; next }
+            /<!-- bootstrap:/ {
+              rest = substr($0, index($0, "<!-- bootstrap:"))
+              if (index(rest, "-->") == 0) in_c = 1
+              next
+            }
+            { print }' "$proj/AGENTS.md" |
+            sed 's/^\*\*Phase 0 — Bootstrap\.\*\*/**Phase 1 — Foundation.**/' > "$proj/AGENTS.md.tmp"
+          mv "$proj/AGENTS.md.tmp" "$proj/AGENTS.md"
+          awk '!/<!-- bootstrap:/' "$proj/docs/audit/readiness.md" > "$proj/docs/audit/readiness.md.tmp"
+          mv "$proj/docs/audit/readiness.md.tmp" "$proj/docs/audit/readiness.md"
+          "$proj/.ai/bin/check"
+
+          # 4. Uninstall cleanly (modified AGENTS.md has only its block stripped; modified readiness.md is preserved)
+          /tmp/sf-ci/uninstall.sh --dir "$proj"
+          test ! -e "$proj/.ai/specforge.lock"
+          test ! -e "$proj/.agents/rules/ai-general.md"
+          test -f "$proj/AGENTS.md"
+          ! grep -q '<!-- specforge:begin -->' "$proj/AGENTS.md"
+          test -f "$proj/docs/audit/readiness.md"
+
+          # 5. Truncated script safety check (piped compound command guard)
+          trunc="$work/trunc"
+          mkdir -p "$trunc"
+          head -c $(($(wc -c < /tmp/sf-ci/install.sh) - 10)) /tmp/sf-ci/install.sh > "$work/install.trunc.sh"
+          if bash "$work/install.trunc.sh" --dir "$trunc" --from "/tmp/sf-ci/specforge-v0.0.0-ci.tar.gz" --yes >/dev/null 2>&1; then
+            echo "truncated script unexpectedly succeeded" >&2
+            exit 1
+          fi
+          test ! -e "$trunc/.ai"

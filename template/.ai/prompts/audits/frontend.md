@@ -77,7 +77,7 @@ translation, inaccessible control, console error), or the same screen built twic
 | Vue | `vue-tsc --noEmit`; named routes only; `views/partials/`; Pinia stores holding one view's state |
 | Next.js | `tsc --noEmit`; `'use client'` on layouts or pages; server modules missing `server-only`; ORM objects or secrets in client props; `NEXT_PUBLIC_` values that are secret; missing `error.tsx`, `loading.tsx`, `not-found.tsx` per surface; hydration warnings |
 | React | `tsc --noEmit`; `eslint-plugin-react-hooks` disabled anywhere; `useEffect` fetching data or deriving state; pages outside `pages/`, or `pages/partials/`; index keys; server data held in a client store |
-| Server templates | Blade, Razor, Twig: literal strings and raw-HTML sinks (`{!! !!}`, `@Html.Raw`, `|raw`) |
+| Server templates | Blade, Razor: literal strings and raw-HTML sinks (`{!! !!}`, `@Html.Raw`) |
 
 ## Output
 

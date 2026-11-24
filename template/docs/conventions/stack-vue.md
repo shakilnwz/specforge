@@ -100,8 +100,8 @@ graph TD
 
 - A Pinia store holds state shared across views or surviving navigation; one view's state stays in
   the view or its composable.
-- Server types are imported from the generated declarations (Spatie TypeScript transformer, or the
-  OpenAPI client for a .NET backend).
+- Server types are imported from the generated declarations (generated from the API's OpenAPI
+  specification or the server stack's type generator).
 
 ## Raw HTML
 
@@ -116,7 +116,8 @@ graph TD
   the config's directory.
 - `vue-tsc --noEmit` is a CI gate.
 - Tests: Vitest with Vue Test Utils for components, titled with the requirement ID
-  (`it('[0012.R3] …')`); Playwright for journeys.
+  (`it('[0012.R3] …')`, run one with `-t 0012.R3`); Playwright for journeys, tagged
+  `{ tag: '@0012.R3' }`.
 
 ---
 

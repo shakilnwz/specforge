@@ -44,23 +44,24 @@ a predictable change. Excluded from every verdict: naming taste with no conventi
 
 1. Read every migration in run order, per connection. Reconstruct each table's final shape.
 2. Compare the reconstruction against the live development schema. A difference means a migration
-   was edited after it ran, a migration never ran, or the database was changed by hand — use
-   `git log -p` on the migration to tell which.
-3. Cross-check every Model against its table: `$table`, `$connection`, `$fillable`, `casts()`,
-   relations and their foreign keys, enum casts against the stored values.
+   was edited after it ran, a migration never ran, or the database was changed by hand — when under
+   version control, use `git log -p` on the migration to tell which.
+3. Cross-check every Model or entity against its table: table and connection mapping, allowed
+   mass-assignment or DTO fields, casts or value conversions, relations and their foreign keys, and
+   enum mappings against the stored values.
 4. Trace every deploy workflow step that migrates: which connection is the default at that point,
    and which migration paths are registered.
 5. Re-read every Critical and High finding against the code before writing it.
 
 ## Checklist
 
-- [ ] **History:** any migration edited after it ran (`git log --follow -p`); live schema differing
-      from the reconstruction; migrations that only work on an empty database.
+- [ ] **History:** any migration edited after it ran (`git log --follow -p` when under version control);
+      live schema differing from the reconstruction; migrations that only work on an empty database.
 - [ ] **Routing:** each connection migrates exactly the tables it should; tenant tables never land in
       the central database; deploy runs the right command per connection; nothing hides a failure
       with `|| true`.
-- [ ] **Framework tables:** `jobs`, `failed_jobs`, `job_batches`, `cache`, `cache_locks`, `sessions`
-      exist on the connection config points at.
+- [ ] **Infrastructure tables:** queue, failed-job, lock and session tables required by the configured
+      drivers exist on the connection configuration points at.
 - [ ] **Keys:** every foreign key exists as a constraint, matches the referenced column's type and
       signedness, and has a deliberate `onDelete`; no cascade removes financial or audit history.
 - [ ] **Indexes:** every foreign key, every column a hot path filters, joins or sorts on, every
@@ -73,8 +74,9 @@ a predictable change. Excluded from every verdict: naming taste with no conventi
       tables; pivot tables named consistently.
 - [ ] **Integrity:** uniqueness enforced by the database where the domain requires it, not only in
       validation; nullable only where absence is meaningful; defaults that match the model.
-- [ ] **Model parity:** casts match column types; enum casts cover every stored value; `$fillable`
-      excludes columns that must not be mass-assigned; soft deletes declared on both sides.
+- [ ] **Model parity:** casts or conversions match column types; enum mappings cover every stored
+      value; mass-assignment or entity binding excludes columns that must not be written from input;
+      soft deletes declared on both sides.
 - [ ] **Migrations' content:** one table created per migration; no data backfill, conditional logic
       or model calls; `down()` either correct or deliberately absent.
 - [ ] **Seeders:** no credential usable outside local development; no seeder required for the app to

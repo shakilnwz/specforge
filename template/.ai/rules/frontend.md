@@ -4,9 +4,17 @@ paths:
   - '**/*.jsx'
   - '**/*.tsx'
   - '**/*.vue'
+  - 'apps/*/resources/**'
+  - 'apps/*/src/app/**'
+  - 'apps/*/src/features/**'
+  - 'apps/*/src/shared/**'
   - 'modules/**/resources/**'
+  - 'packages/*/src/**'
   - 'packages/js/**'
   - 'resources/**'
+  - 'src/app/**'
+  - 'src/features/**'
+  - 'src/shared/**'
 ---
 
 # Frontend

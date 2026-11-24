@@ -2,6 +2,8 @@
 paths:
   - '**/*.cs'
   - '**/*.php'
+  - 'apps/*/src/modules/**/server/**'
+  - 'apps/*/src/server/**'
   - 'src/modules/**/server/**'
   - 'src/server/**'
 ---

@@ -46,44 +46,124 @@ check_markers() {
         pass "placeholders allowed during Phase ${phase:-0}"
         return 0
     fi
-    hits=$(grep -rnF --exclude-dir=bin '<!-- bootstrap:' AGENTS.md CLAUDE.md docs .ai .github 2>/dev/null)
-    if [ -z "$hits" ]; then
+
+    targets=
+    for p in AGENTS.md CLAUDE.md docs .ai .github; do
+        [ -e "$p" ] && targets="$targets $p"
+    done
+    if [ -d apps ]; then
+        app_docs=$(find apps -maxdepth 2 -type d -name docs 2>/dev/null | sort)
+        for d in $app_docs; do
+            targets="$targets $d"
+        done
+    fi
+
+    : > "$tmp/marker_hits"
+    if [ -n "$targets" ]; then
+        # Exclude kit-owned docs/prompts that cite the marker syntax in backticks,
+        # and strip inline code spans before scanning for real HTML comment placeholders.
+        find $targets \
+            \( -path '.ai/bin' -o -path '.ai/prompts' -o -name .git -o -name node_modules \
+               -o -name vendor -o -name bin -o -name obj -o -name .next -o -name dist \
+               -o -name build \) -prune -o \
+            -type f -print 2>/dev/null | sort |
+            awk '
+                {
+                    file = $0
+                    n = 0
+                    while ((getline line < file) > 0) {
+                        n++
+                        orig = line
+                        gsub(/`[^`]*`/, "", line)
+                        if (index(line, "<!-- bootstrap:") > 0) {
+                            print file ":" n ":" orig
+                        }
+                    }
+                    close(file)
+                }' > "$tmp/marker_hits"
+    fi
+
+    if [ ! -s "$tmp/marker_hits" ]; then
         pass 'no bootstrap placeholders remain'
     else
-        printf '%s\n' "$hits" | sed 's/^/      /'
+        sed 's/^/      /' "$tmp/marker_hits"
         fail "bootstrap placeholders remain in Phase $phase"
     fi
 }
 
 check_trace() {
-    tmp=$(mktemp "${TMPDIR:-/tmp}/check.XXXXXX") || { fail 'trace: cannot create a temporary file'; return 0; }
-    grep -rhoE '[0-9]{4}\.R[0-9]+' . \
-        --exclude-dir=.git --exclude-dir=docs --exclude-dir=.ai --exclude-dir=.claude \
-        --exclude-dir=.cursor --exclude-dir=.agents --exclude-dir=.windsurf --exclude-dir=.kiro \
-        --exclude-dir=.github --exclude-dir=node_modules --exclude-dir=vendor --exclude-dir=bin \
-        --exclude-dir=obj --exclude-dir=.next --exclude-dir=dist --exclude-dir=build \
-        2>/dev/null | sort -u > "$tmp"
+    find . \
+        \( -name .git -o -name docs -o -name .ai -o -name .claude -o -name .cursor \
+           -o -name .agents -o -name .windsurf -o -name .kiro -o -name .github \
+           -o -name node_modules -o -name vendor -o -name bin -o -name obj \
+           -o -name .next -o -name dist -o -name build -o -name .venv \
+           -o -name coverage -o -name storage -o -name .turbo -o -name .nuxt \) -prune -o \
+        -type f \( -path '*/tests/*' -o -path '*/test/*' -o -path '*/__tests__/*' \
+           -o -path '*/e2e/*' -o -path '*/features/*' -o -path '*.Tests/*' \
+           -o -name '*.test.*' -o -name '*.spec.*' -o -name '*Test.php' \
+           -o -name '*Tests.cs' -o -name '*.feature' \) -print 2>/dev/null |
+        awk '
+            {
+                file = $0
+                while ((getline s < file) > 0) {
+                    while (match(s, /[0-9][0-9][0-9][0-9]\.R[0-9]+/)) {
+                        print substr(s, RSTART, RLENGTH)
+                        s = substr(s, RSTART + RLENGTH)
+                    }
+                }
+                close(file)
+            }' | sort -u > "$tmp/tags"
+
+    spec_roots=
+    [ -d docs ] && spec_roots="$spec_roots docs"
+    [ -d apps ] && spec_roots="$spec_roots apps"
+    : > "$tmp/specs"
+    if [ -n "$spec_roots" ]; then
+        find $spec_roots -type f -path '*/specs/[0-9][0-9][0-9][0-9]-*/spec.md' 2>/dev/null | sort > "$tmp/specs"
+    fi
 
     specs=0
     missing=0
-    find docs apps -type f -path '*/specs/[0-9][0-9][0-9][0-9]-*/spec.md' 2>/dev/null | sort > "$tmp.specs"
     while IFS= read -r spec; do
-        status=$(grep -m1 '^- \*\*Status:\*\*' "$spec" | sed 's/<!--.*-->//')
+        status=$(awk '/^- \*\*Status:\*\*/ { sub(/<!--.*-->/, ""); print; exit }' "$spec")
         case $status in *Implemented*) ;; *) continue ;; esac
         specs=$((specs + 1))
         num=$(basename "$(dirname "$spec")" | cut -c1-4)
-        ids=$({
-            sed -n 's/^### \(R[0-9][0-9]*\)[^0-9].*/\1/p' "$spec"
-            sed -n 's/^| *\(R[0-9][0-9]*\) *|.*/\1/p' "$spec"
-        } | sort -u)
-        for id in $ids; do
-            if ! grep -qxF "$num.$id" "$tmp"; then
+        awk '
+            /^### R[0-9]+($|[^0-9])/ {
+                id = $2
+                sub(/[^0-9]*$/, "", id)
+                if (id ~ /^R[0-9]+$/) test_req[id] = 1
+                next
+            }
+            /^\|[ \t]*R[0-9]+[ \t]*\|/ {
+                n = split($0, cols, "|")
+                id = cols[2]
+                gsub(/^[ \t]+|[ \t]+$/, "", id)
+                how = (n >= 5 ? cols[5] : "")
+                if (tolower(how) ~ /manual/ || how ~ /docs\/reports\// || how ~ /docs\/audit\//) {
+                    ext_req[id] = 1
+                } else {
+                    test_req[id] = 1
+                }
+            }
+            END {
+                for (id in test_req) print "T\t" id
+                for (id in ext_req) if (!(id in test_req)) print "E\t" id
+            }' "$spec" | sort > "$tmp/spec_ids"
+
+        while IFS="$(printf '\t')" read -r kind id; do
+            [ -n "$id" ] || continue
+            if [ "$kind" = E ]; then
+                if ! grep -qxF "$num.$id" "$tmp/tags"; then
+                    note "trace: $num.$id ($spec) verified outside the test suite"
+                fi
+            elif ! grep -qxF "$num.$id" "$tmp/tags"; then
                 fail "trace: $num.$id ($spec) is cited by no test"
                 missing=$((missing + 1))
             fi
-        done
-    done < "$tmp.specs"
-    rm -f "$tmp" "$tmp.specs"
+        done < "$tmp/spec_ids"
+    done < "$tmp/specs"
 
     if [ "$missing" -eq 0 ]; then
         pass "every requirement of $specs Implemented spec(s) is cited by a test"
@@ -98,14 +178,23 @@ check_budgets() {
         else
             fail "AGENTS.md is $size bytes; Codex reads at most 32 KiB of project instructions by default"
         fi
+    else
+        fail 'AGENTS.md is missing'
     fi
+    ag_count=0
+    ag_bad=0
     for f in .agents/rules/*.md; do
         [ -f "$f" ] || continue
+        ag_count=$((ag_count + 1))
         size=$(wc -c < "$f" | tr -d ' ')
         if [ "$size" -gt 24000 ]; then
             fail "$f is $size bytes; Antigravity truncates rule files over 24,000 bytes"
+            ag_bad=$((ag_bad + 1))
         fi
     done
+    if [ "$ag_count" -gt 0 ] && [ "$ag_bad" -eq 0 ]; then
+        pass "all $ag_count Antigravity rule file(s) within 24,000 bytes"
+    fi
 }
 
 check_incoming() {
@@ -129,6 +218,11 @@ main() {
 
     root=$(cd "$(dirname "$0")/../.." && pwd) || exit 2
     cd "$root" || exit 2
+
+    tmp=$(mktemp -d "${TMPDIR:-/tmp}/check.XXXXXX") || { fail 'cannot create a temporary directory'; exit 1; }
+    trap 'rm -rf "$tmp"' EXIT
+    trap 'rm -rf "$tmp"; exit 130' INT
+    trap 'rm -rf "$tmp"; exit 143' TERM
 
     check_sync
     check_markers

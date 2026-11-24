@@ -2,7 +2,13 @@
 paths:
   - '**/*.tsx'
   - '**/middleware.ts'
+  - '**/next.config.*'
   - '**/proxy.ts'
+  - 'app/**'
+  - 'apps/*/app/**'
+  - 'apps/*/src/app/**'
+  - 'apps/*/src/modules/**'
+  - 'apps/*/src/server/**'
   - 'next.config.*'
   - 'src/app/**'
   - 'src/modules/**'
@@ -34,6 +40,6 @@ to report.
 ## Framework mechanics
 - Check the installed `next` version before relying on an API; the App Router's caching defaults
   change between majors.
-- Tooling: ESLint, Prettier, `tsc --noEmit`, run when asked; `knip` for dead code.
+- Tooling: ESLint, Prettier, `tsc --noEmit` before handing off; `knip` for dead code.
 - Tests: Vitest titles prefixed `[NNNN.Rn]` (run one with `-t NNNN.Rn`), Playwright tagged
   `{ tag: '@NNNN.Rn' }`.

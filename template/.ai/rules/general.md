@@ -41,13 +41,15 @@ Do not add, remove or upgrade a dependency, create a new top-level directory, ad
 change a convention without the owner's approval in the session. Propose it with the reason.
 
 ## Destructive commands
-Never run `migrate:fresh`, `migrate:reset`, `db:wipe`, `db:seed` against a non-test database,
+Never run `migrate:fresh`, `migrate:reset`, `db:wipe`, `db:seed`, `dotnet ef database drop`,
+`prisma migrate reset`, or any destructive schema or data command against a non-test database,
 `git reset --hard`, `git push --force`, `git clean`, or delete files you did not create in this
 task, without explicit approval for that command in this session.
 
 ## No verification scripts
 Do not write throwaway verification scripts or tinker sessions when a test can prove the
-behaviour. Write the test (see `docs/conventions/testing.md`); run it when asked.
+behaviour. Write the test and run the minimum filtered test that proves the change (see
+`docs/conventions/testing.md`); state in the hand-off if it could not run.
 
 ## Sub-agent and tool output is a lead, not a fact
 A finding, diff or summary produced by a sub-agent or tool is unverified until you have read the

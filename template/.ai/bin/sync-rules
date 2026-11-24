@@ -111,7 +111,7 @@ parse_rule() {
 yaml_item() {
     case $1 in
         *[[:space:]]* | *\'* | *\"* | *:* | *\{* | *\}* | *\[* | *\]* | *,* | *\&* | *\** | *\#* | *\?*)
-            printf "'%s'" "$1" ;;
+            printf "'%s'" "$(printf '%s' "$1" | sed "s/'/''/g")" ;;
         *)
             printf '%s' "$1" ;;
     esac
@@ -148,7 +148,7 @@ render() {
             if [ "$always" = yes ]; then
                 fm=$(printf -- '---\nalwaysApply: true\n---')
             else
-                fm=$(printf -- '---\nglobs: %s\nalwaysApply: false\n---' "$(join_globs ', ' '')")
+                fm=$(printf -- '---\nglobs: "%s"\nalwaysApply: false\n---' "$(join_globs ', ' '')")
             fi
             ;;
         copilot)
@@ -278,7 +278,7 @@ main() {
         parse_rule "$src"
 
         expected=$(boost_frontmatter)
-        actual=$(awk 'NR == 1 && !/^---$/ { exit } { print } NR > 1 && /^---$/ { exit }' "$stage/.src")
+        actual=$(awk 'NR == 1 && !/^---[ \t]*$/ { exit } { print } NR > 1 && /^---[ \t]*$/ { exit }' "$stage/.src")
         if [ "$actual" != "$expected" ]; then
             report "frontmatter: $src is not in the form Laravel Boost writes back; expected:"
             printf '%s\n' "$expected" | sed 's/^/    /'

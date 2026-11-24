@@ -37,8 +37,8 @@ deploy can leave it broken or inconsistent.
    hits, what happens when a step fails (`|| true`, `continue-on-error`), how it rolls back, whether
    caches are rebuilt, whether workers restart on new code.
 2. **Workers and schedules:** every queue named in code has a worker in every environment; every
-   scheduled command is registered and the scheduler runs; timeouts shorter than the queue's
-   `retry_after`.
+   scheduled command is registered and the scheduler runs; job timeouts stay shorter than the
+   queue's retry or visibility window.
 3. **Failure sinks:** failed jobs land in a table that exists on the configured connection; exceptions
    reach error tracking; logs are structured, rotated and shipped.
 4. **Configuration:** every configuration read has an example-environment key; required values stop
@@ -62,14 +62,6 @@ deploy can leave it broken or inconsistent.
 - [ ] Health checks and alerts exist.
 - [ ] Versions match across environments.
 
-## Stack notes
-
-| Stack | Notes |
-| --- | --- |
-| Laravel | Supervisor programs per queue; `schedule:run` cron or `schedule:work`; `queue:restart` on deploy; `retry_after` above every job `$timeout`; `failed_jobs` on the configured connection |
-| .NET | Hosted services and their restart policy; health checks (`MapHealthChecks`) for readiness and liveness; idempotent migration scripts or bundles applied by the pipeline, not at startup; Data Protection keys shared across instances |
-| Next.js | Where it runs (container, Node server, managed platform) and what that implies for long work — no job outlives a request without a job host; `NEXT_PUBLIC_` values baked at build time per environment; cache persistence across instances |
-
 ## Severity
 
 | Severity | In this audit |
@@ -78,6 +70,20 @@ deploy can leave it broken or inconsistent.
 | High | A queue or schedule with no worker in production; failures recorded nowhere; no backup, or one never restored |
 | Medium | No alerting; silent degradation on missing config; environment version drift |
 | Low | Logging format, cache rebuild steps, documentation of runbooks |
+
+## Stack notes
+
+| Stack | Notes |
+| --- | --- |
+| Laravel | Supervisor programs per queue; `schedule:run` cron or `schedule:work`; `queue:restart` on deploy; `retry_after` above every job `$timeout`; `failed_jobs` on the configured connection |
+| .NET | Hosted services and their restart policy; health checks (`MapHealthChecks`) for readiness and liveness; idempotent migration scripts or bundles applied by the pipeline, not at startup; Data Protection keys shared across instances |
+| Next.js | Where it runs (container, Node server, managed platform) and what that implies for long work — no job outlives a request without a job host; `NEXT_PUBLIC_` values baked at build time per environment; cache persistence across instances |
+| React / Vue | `VITE_*` values baked at build time per environment; SPA fallback routing and immutable cache headers on hashed static assets versus `no-cache` on `index.html` |
+
+## Output
+
+- IDs `OP1…`.
+- An **Environment parity** table: runtime, database, cache and queue configuration across dev, CI, staging and production.
 
 ## Done when
 

@@ -42,6 +42,9 @@ EOF
 }
 
 cmd_update() {
+    if [ -n "$ANSWERS_FILE" ] && [ "$RECONFIGURE" = 1 ]; then
+        usage_error 'use either --answers FILE or --reconfigure, not both'
+    fi
     [ -f "$LOCK" ] || die "SpecForge is not installed in $TARGET (no $LOCK_REL): run install.sh"
     cp "$LOCK" "$WORK/lock.old"
     fetch_source
@@ -55,6 +58,7 @@ cmd_update() {
         A_AGENTS=$(awk '$1 == "answer" && $2 ~ /^agents=/ { sub(/^answer[ \t]+agents=/, ""); print; exit }' "$WORK/lock.old")
     fi
     A_AGENTS=$(squeeze "$A_AGENTS")
+    AGENTS_BEFORE=$A_AGENTS
     cp "$WORK/apps" "$WORK/apps.before"
     if [ -n "$ANSWERS_FILE" ]; then
         load_answers
@@ -64,6 +68,8 @@ cmd_update() {
         ask_questions
     fi
     validate_answers
+    AGENTS_CHANGED=0
+    [ "$A_AGENTS" != "$AGENTS_BEFORE" ] && AGENTS_CHANGED=1
     APPS_CHANGED=0
     cmp -s "$WORK/apps" "$WORK/apps.before" || APPS_CHANGED=1
     say ''
@@ -71,6 +77,7 @@ cmd_update() {
     say "SpecForge ${old:-?} to $KIT_VERSION in $TARGET"
     show_answers
     git_report
+    if [ "$RECONFIGURE" = 1 ] && [ "$DRY_RUN" = 0 ]; then confirm; fi
     install_or_update
 }
 

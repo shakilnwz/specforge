@@ -8,8 +8,8 @@ names the mechanism for every rule and the stack's own sinks and traps.
 
 Each rule below exists because its absence is a recurring class of real defect: a stored XSS
 through a support ticket, a platform token sent to a host the customer chose, a withdrawal that
-overdraws under concurrency, a rate limiter that silently does nothing, 119 of 174 admin endpoints
-with no permission check.
+overdraws under concurrency, a rate limiter that silently does nothing, or an admin surface where
+most endpoints lack a permission check.
 
 ## Scope
 

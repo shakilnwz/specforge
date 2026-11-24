@@ -55,9 +55,9 @@ or a graph no tool enforces.
    at Level 2 or 3, no cross-module foreign key, join or query at all.
 7. **Events.** Payloads carry identifiers and facts, not Models; listeners in other modules do not
    reach back into the emitter's tables.
-8. **Co-change.** From `git log --name-only` over the last 6 months, count commits that touch two
-   modules together. Pairs that change together far more often than apart have a hidden seam, or
-   are one module.
+8. **Co-change.** When under version control, count commits in `git log --name-only` over the last
+   6 months that touch two modules together; pairs that change together far more often than apart
+   have a hidden seam, or are one module. Without git, list under **Not checked**.
 9. **Autonomy.** Can each module's tests run without other feature modules' internals? If a module
    were removed, what breaks besides its declared dependents?
 10. **Enforcement.** Is the declared graph checked in CI? An unguarded graph is a finding at every
@@ -86,7 +86,7 @@ or a graph no tool enforces.
 
 | Stack | Notes |
 | --- | --- |
-| Laravel | Explicit edges: `grep -rn "^use Modules\\\\" modules/<A>/` minus `Modules\<A>`; invisible: `<module>::` in PHP, Blade and Twig, `config('<module>.')`; enforcement: `deptrac` |
+| Laravel | Explicit edges: `grep -rn "^use Modules\\\\" modules/<A>/` minus `Modules\<A>`; invisible: `<module>::` in PHP and Blade, `config('<module>.')`; enforcement: Pest `arch()` (or `deptrac` per ADR-0001) |
 | .NET | Explicit edges: `<ProjectReference>`s (only `.Contracts` allowed) and `using` of other modules' namespaces; visibility: `public` types outside `.Contracts`, `InternalsVisibleTo` beyond the test project; data: one `DbContext` per module, `HasDefaultSchema`; enforcement: NetArchTest or ArchUnitNET |
 | Next.js | Explicit edges: imports of `@/modules/<other>/…` beyond `index.ts` and `server/index.ts`; `server-only` respected; enforcement: `dependency-cruiser` or `eslint-plugin-boundaries`, run with `npx` from outside the tree |
 | React | Feature folders importing another feature's internals instead of its `index.ts`; enforcement: `eslint-plugin-boundaries` or `dependency-cruiser` |

@@ -1,6 +1,12 @@
 ---
 paths:
   - '**/*.vue'
+  - 'apps/*/resources/js/**/*.ts'
+  - 'apps/*/src/features/**/*.ts'
+  - 'apps/*/src/shared/**/*.ts'
+  - 'resources/js/**/*.ts'
+  - 'src/features/**/*.ts'
+  - 'src/shared/**/*.ts'
 ---
 
 # Vue
@@ -19,5 +25,5 @@ beside the core section it realises.
 - `v-html` only on HTML sanitized server-side for that purpose.
 
 ## Tooling
-`lint` runs ESLint then Prettier; `vue-tsc --noEmit` type-checks. Run when asked. If a change does
+`lint` runs ESLint then Prettier; `vue-tsc --noEmit` type-checks before handing off. If a change does
 not show in the browser, the dev server or a build may be needed — ask, do not guess.

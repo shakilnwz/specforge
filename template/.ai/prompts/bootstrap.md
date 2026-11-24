@@ -10,10 +10,10 @@ has code is taken through [`adopt.md`](adopt.md) instead.
 `.ai/agents` — and runs `.ai/bin/sync-rules`. It creates no application code and no project
 infrastructure (ignore files, environment files, CI workflows, a README): where a G0 criterion needs
 one, it reports what is missing and writes it only if the owner asks.
-**Output:** filled `AGENTS.md`; `docs/adr/0001-*.md`, `docs/adr/0002-*.md`; a context page in
-`docs/architecture/`; `docs/reference/glossary.md`; `.ai/agents` and the generated agent rule files;
-the rules trimmed to the stacks in use; updated G0 rows in `docs/audit/readiness.md`; a G0 gate
-report.
+**Output:** filled `AGENTS.md`; `docs/adr/0001-*.md`, `docs/adr/0002-*.md`; a context page and
+`docs/architecture/surfaces.md` in `docs/architecture/`; `docs/reference/glossary.md`; `.ai/agents`
+and the generated agent rule files; the rules trimmed to the stacks in use; updated G0 rows in
+`docs/audit/readiness.md`; a G0 gate report.
 **Inputs:** the owner, who answers the questions below. Never invent an answer the owner did not
 give; a placeholder left open is better than a fabricated fact.
 
@@ -22,7 +22,8 @@ give; a placeholder left open is better than a fabricated fact.
 1. Confirm the rules are present: `AGENTS.md`, `CLAUDE.md`, `.ai/rules/`, `.ai/prompts/`,
    `.ai/agents`, `.ai/bin/`, `docs/conventions/` (core conventions and `stack-*.md` profiles),
    `docs/templates/`, `docs/audit/readiness.md`.
-2. List every placeholder: `grep -rn '<!-- bootstrap:' AGENTS.md docs .ai .github`.
+2. Check remaining placeholders by inspecting `AGENTS.md`, `CLAUDE.md`, `docs/audit/readiness.md`,
+   and `.github/` for `<!-- bootstrap:` (or run `.ai/bin/check` once past Phase 0).
 3. Read `lifecycle.md` → G0, [`documentation.md`](../../docs/conventions/documentation.md) and
    [`specs.md`](../../docs/conventions/specs.md).
 
@@ -71,9 +72,10 @@ Ask in one round, grouped, with a recommended default for each where one exists:
    inside a server app on a row of its own, since the most specific path wins; **Architecture
    Overview** from the ADRs; **Common Commands**, **Local Endpoints** and **Database** once the
    environment exists (otherwise leave the placeholder and say so).
-5. **Trim the rules to the stacks in use**, once the owner approves ADR-0001: list the profiles, the
-   `.ai/rules/` stack files and the PR-template lines no app uses, and remove them with the owner's
-   approval. Never remove a core convention.
+5. **Trim the rules to the stacks in use**, once the owner approves ADR-0001: list the profiles and
+   the `.ai/rules/` stack files no app uses, and remove them with the owner's approval (or run
+   `update.sh --reconfigure` once the stacks are decided so `.ai/specforge.lock` and the trimmed
+   profiles stay synchronized). Never remove a core convention.
 6. Leave the stack rule files' globs as installed: they match by file type, and the **Stacks** table
    decides which stack binds which path (`.ai/rules/general.md`). Adjust a core rule file's `paths:`
    only where the layout needs it — module directories when modular — keeping the frontmatter in the
@@ -82,8 +84,8 @@ Ask in one round, grouped, with a recommended default for each where one exists:
    fills it from its answers — then run `.ai/bin/sync-rules` after any change. It generates every
    agent's rule files and regenerates `.ai/rules/index.md`; a `conflict:` line names a file it will
    not overwrite.
-8. Fill the surface-declaration table in `architecture.md` from ADR-0002, leaving the mechanism
-   column to the profile.
+8. Write `docs/architecture/surfaces.md` (columns: `App`, `Surface`, `Host / prefix`,
+   `Authentication`, `Declared in`) from ADR-0002, leaving the mechanism column to the profile.
 9. **Check, do not create, what G0 asks of the project:** ignore files and `.editorconfig` (G0.6),
    example environment files with no real values, secrets in history where the project is under
    version control, a one-command local boot (G0.7), CI running each app's lint, format check, type

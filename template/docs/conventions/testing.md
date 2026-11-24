@@ -22,8 +22,10 @@ Applies to:
 - A bug fix carries a regression test that fails without the fix and passes with it, citing the
   requirement the bug violated — or the requirement the fix adds to the spec, when no spec covered
   the behaviour.
-- Writing the test is part of the change. Running the suite is on request (see `AGENTS.md`); a
-  hand-off that did not run the test says so.
+- Writing and running the minimum filtered test that proves the change is part of completing it
+  (and acceptance tests are seen failing before the code that makes them pass). Leave the full
+  suite to CI, and state plainly in the hand-off if tests or lint could not run or were skipped at
+  the user's request.
 - Cover the happy path and the failures that matter — authorization refused, validation refused,
   the concurrent or repeated call — not every permutation.
 - A test proves behaviour through the boundary a caller uses: a feature test through the entry

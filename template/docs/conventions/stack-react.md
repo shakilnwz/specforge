@@ -113,8 +113,8 @@ A Next.js app keeps its own layout — `src/app/` for routing, `src/modules/` fo
   one page's state stays in the page or its hook.
 - State a user can share or reload — filters, sort, page, the selected tab — lives in the URL's
   search parameters, parsed with Zod.
-- Server types are imported from the generated declarations (Spatie TypeScript transformer, or the
-  OpenAPI client for a .NET backend).
+- Server types are imported from the generated declarations (generated from the API's OpenAPI
+  specification or the server stack's type generator).
 
 ## Forms
 

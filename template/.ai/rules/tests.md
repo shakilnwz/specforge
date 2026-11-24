@@ -1,9 +1,16 @@
 ---
 paths:
   - '**/*.Tests/**'
+  - '**/*.spec.js'
+  - '**/*.spec.jsx'
   - '**/*.spec.ts'
+  - '**/*.spec.tsx'
+  - '**/*.test.js'
+  - '**/*.test.jsx'
   - '**/*.test.ts'
   - '**/*.test.tsx'
+  - 'apps/*/e2e/**'
+  - 'apps/*/tests/**'
   - 'e2e/**'
   - 'modules/**/tests/**'
   - 'tests/**'
@@ -29,7 +36,8 @@ ships with a regression test that fails without it; one that passes on the old c
 - Fake every outbound call, asserting the host as well as the payload.
 - Freeze time where a test compares it.
 - The real database engine, never an in-memory substitute.
-- When asked to run tests, run the minimum: one file, one name, or one requirement tag.
+- Run the minimum test that proves the change — one file, one name, or one requirement tag — and
+  leave the full suite to CI.
 
 ## Never point the suite at a real database
 The test database is created by the suite and guarded by name. If the guard trips, fix the

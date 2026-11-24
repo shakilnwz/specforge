@@ -1,6 +1,8 @@
 ---
 paths:
   - '.ai/prompts/**'
+  - 'apps/*/docs/audit/**'
+  - 'apps/*/docs/reports/**'
   - 'docs/audit/**'
   - 'docs/reports/**'
 ---

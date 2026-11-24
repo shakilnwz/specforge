@@ -4,6 +4,8 @@ paths:
   - '**/*.csproj'
   - '**/*.sln'
   - '**/*.slnx'
+  - '**/Directory.Build.props'
+  - '**/Directory.Packages.props'
   - Directory.Build.props
   - Directory.Packages.props
 ---
@@ -31,8 +33,8 @@ defect to report.
 ## Framework mechanics
 - Package versions live in `Directory.Packages.props`; check the installed version before relying on
   an API. Adding, removing or upgrading a package needs the owner's approval.
-- Formatting: `dotnet format`, run with lint when asked; CI runs `--verify-no-changes`.
+- Formatting: `dotnet format` before handing off; CI runs `--verify-no-changes`.
 - Tests are xUnit, tagged `[Trait("Requirement", "NNNN.Rn")]`, against a real database through
   Testcontainers — never the EF in-memory provider. Time comes from `TimeProvider`.
-- When asked to run tests, run the minimum: `dotnet test --filter "Requirement=NNNN.Rn"` or a
+- Run the minimum test that proves the change: `dotnet test --filter "Requirement=NNNN.Rn"` or a
   `FullyQualifiedName~<Name>` filter.

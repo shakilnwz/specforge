@@ -85,7 +85,7 @@ production. The foundation's capabilities — sign-in, roles, tenancy — are sp
 
 | ID | Criterion |
 | --- | --- |
-| G1.1 | Every app's surfaces are declared in the one place its profile names, and the surface table in [`architecture.md`](architecture.md) is filled |
+| G1.1 | Every app's surfaces are declared in the one place its profile names, and recorded in `docs/architecture/surfaces.md` |
 | G1.2 | When modular: every module in ADR-0002 exists with its public surface, and the dependency graph is enforced by tooling |
 | G1.3 | Arch tests enforce the mechanically checkable conventions listed in [`testing.md`](testing.md), and pass |
 | G1.4 | Authentication and the authorization model are specified, Implemented, and deny by default |

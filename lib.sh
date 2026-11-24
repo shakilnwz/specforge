@@ -147,20 +147,25 @@ parse_args() {
         has_word "$takes" "$opt" || usage_error "unknown option: $1"
         case $1 in
             --dir) [ $# -ge 2 ] || usage_error '--dir needs a directory'; TARGET=$2; shift 2 ;;
-            --dir=*) TARGET=${1#--dir=}; shift ;;
+            --dir=*) TARGET=${1#--dir=}; [ -n "$TARGET" ] || usage_error '--dir needs a directory'; shift ;;
             --answers) [ $# -ge 2 ] || usage_error '--answers needs a file'; ANSWERS_FILE=$2; shift 2 ;;
-            --answers=*) ANSWERS_FILE=${1#--answers=}; shift ;;
+            --answers=*) ANSWERS_FILE=${1#--answers=}; [ -n "$ANSWERS_FILE" ] || usage_error '--answers needs a file'; shift ;;
             --version) [ $# -ge 2 ] || usage_error '--version needs a version'; WANT_VERSION=$2; shift 2 ;;
-            --version=*) WANT_VERSION=${1#--version=}; shift ;;
+            --version=*) WANT_VERSION=${1#--version=}; [ -n "$WANT_VERSION" ] || usage_error '--version needs a version'; shift ;;
             --from) [ $# -ge 2 ] || usage_error '--from needs a path'; FROM=$2; shift 2 ;;
-            --from=*) FROM=${1#--from=}; shift ;;
+            --from=*) FROM=${1#--from=}; [ -n "$FROM" ] || usage_error '--from needs a path'; shift ;;
             --yes | -y) ASSUME_YES=1; shift ;;
             --reconfigure) RECONFIGURE=1; shift ;;
             --dry-run) DRY_RUN=1; shift ;;
             *) usage_error "unknown option: $1" ;;
         esac
     done
-    case $WANT_VERSION in '' | v[0-9]*) ;; *) usage_error "not a version: $WANT_VERSION (expected vX.Y.Z)" ;; esac
+    case $WANT_VERSION in
+        '') ;;
+        v[0-9]*.[0-9]*.[0-9]*)
+            case $WANT_VERSION in *[!v0-9A-Za-z.-]* | *..* | *.) usage_error "not a version: $WANT_VERSION (expected vX.Y.Z)" ;; esac ;;
+        *) usage_error "not a version: $WANT_VERSION (expected vX.Y.Z)" ;;
+    esac
     if [ -n "$ANSWERS_FILE" ]; then
         [ -f "$ANSWERS_FILE" ] || die "no such answers file: $ANSWERS_FILE"
         ANSWERS_FILE=$(cd "$(dirname "$ANSWERS_FILE")" && pwd -P)/$(basename "$ANSWERS_FILE")
@@ -278,22 +283,71 @@ fetch_source() {
 # Detection: what the project already is. Read-only.
 
 pkg_has() {
-    grep -Eq "\"$2\"[[:space:]]*:" "$1" 2>/dev/null
+    awk -v pkg="$2" '
+        {
+            line = $0
+            len = length(line)
+            for (i = 1; i <= len; i++) {
+                ch = substr(line, i, 1)
+                if (in_str) {
+                    if (esc) { tok = tok ch; esc = 0 }
+                    else if (ch == "\\") { esc = 1 }
+                    else if (ch == "\"") { in_str = 0; last_str = tok }
+                    else { tok = tok ch }
+                } else {
+                    if (ch == "\"") { in_str = 1; tok = "" }
+                    else if (ch == "{") {
+                        depth++
+                        if (depth == 2 && pending_deps) { in_deps = 1; pending_deps = 0 }
+                    } else if (ch == "}") {
+                        if (depth == 2 && in_deps) in_deps = 0
+                        depth--
+                        pending_deps = 0
+                    } else if (ch == ":") {
+                        if (depth == 1 && (last_str == "dependencies" || last_str == "devDependencies")) {
+                            pending_deps = 1
+                        } else if (depth == 2 && in_deps && last_str == pkg) {
+                            found = 1
+                            exit
+                        }
+                        last_str = ""
+                    } else if (ch !~ /[ \t\r\n]/) {
+                        last_str = ""
+                        pending_deps = 0
+                    }
+                }
+            }
+        }
+        END { exit !found }' "$1" 2>/dev/null
 }
 
 add_detected() {
     printf '%s %s\n' "$1" "$2" >> "$WORK/detected.raw"
 }
 
+has_ancestor_sln() {
+    local cur=$1
+    local stop
+    stop=$(dirname "$TARGET")
+    [ -s "$WORK/sln_dirs" ] || return 1
+    while :; do
+        grep -qxF "$cur" "$WORK/sln_dirs" && return 0
+        [ "$cur" = "$TARGET" ] && break
+        cur=$(dirname "$cur")
+        [ "$cur" != "$stop" ] || break
+    done
+    return 1
+}
+
 detect_apps() {
+    local f d rel front
     : > "$WORK/detected.raw"
     find "$TARGET" -maxdepth 4 \
         \( -name .git -o -name node_modules -o -name vendor -o -name bin -o -name obj \
            -o -name .next -o -name dist -o -name build -o -name .ai -o -name docs \) -prune -o \
         -type f \( -name artisan -o -name package.json -o -name '*.sln' -o -name '*.slnx' \
                    -o -name '*.csproj' \) -print 2>/dev/null | LC_ALL=C sort > "$WORK/found"
-    has_sln=0
-    grep -Eq '\.slnx?$' "$WORK/found" && has_sln=1
+    awk '/\.slnx?$/ { sub(/\/[^\/]*$/, ""); print }' "$WORK/found" | LC_ALL=C sort -u > "$WORK/sln_dirs"
     while IFS= read -r f; do
         d=$(dirname "$f")
         rel=$(relpath "$d")
@@ -303,21 +357,20 @@ detect_apps() {
             *.sln | *.slnx)
                 add_detected "$rel" dotnet ;;
             *.csproj)
-                [ "$has_sln" = 0 ] && grep -q 'Microsoft.NET.Sdk.Web' "$f" && add_detected "$rel" dotnet ;;
+                ! has_ancestor_sln "$d" && grep -q 'Microsoft.NET.Sdk.Web' "$f" && add_detected "$rel" dotnet ;;
             */package.json)
                 if pkg_has "$f" next; then
                     add_detected "$rel" nextjs
                 else
-                    front=
-                    if pkg_has "$f" react; then front=react; elif pkg_has "$f" vue; then front=vue; fi
-                    if [ -n "$front" ]; then
+                    for front in react vue; do
+                        pkg_has "$f" "$front" || continue
                         if [ -f "$d/artisan" ] && [ -d "$d/resources/js" ]; then
                             if [ "$rel" = . ]; then add_detected resources/js "$front"
                             else add_detected "$rel/resources/js" "$front"; fi
                         else
                             add_detected "$rel" "$front"
                         fi
-                    fi
+                    done
                 fi ;;
         esac
     done < "$WORK/found"
@@ -361,10 +414,24 @@ detect_agents() {
 }
 
 detect_host() {
+    local git_cfg= gd= cd_rel=
     if [ -d "$TARGET/.github" ]; then printf 'github\n'; return 0; fi
     if [ -f "$TARGET/.git/config" ]; then
-        if grep -q 'github\.com' "$TARGET/.git/config"; then printf 'github\n'; return 0; fi
-        if grep -Eq 'gitlab|bitbucket|dev\.azure\.com|codeberg' "$TARGET/.git/config"; then printf 'other\n'; return 0; fi
+        git_cfg="$TARGET/.git/config"
+    elif [ -f "$TARGET/.git" ]; then
+        gd=$(sed -n 's/^gitdir:[[:space:]]*//p' "$TARGET/.git" | sed -n 1p)
+        if [ -n "$gd" ]; then
+            case $gd in /*) ;; *) gd="$TARGET/$gd" ;; esac
+            if [ -f "$gd/commondir" ]; then
+                cd_rel=$(sed -n 1p "$gd/commondir")
+                case $cd_rel in /*) gd=$cd_rel ;; *) gd="$gd/$cd_rel" ;; esac
+            fi
+            [ -f "$gd/config" ] && git_cfg="$gd/config"
+        fi
+    fi
+    if [ -n "$git_cfg" ] && [ -f "$git_cfg" ]; then
+        if grep -q 'github\.com' "$git_cfg"; then printf 'github\n'; return 0; fi
+        if grep -Eq 'gitlab|bitbucket|dev\.azure\.com|codeberg' "$git_cfg"; then printf 'other\n'; return 0; fi
     fi
     printf 'github\n'
 }
@@ -374,6 +441,7 @@ detect_gherkin() {
 }
 
 detect_boost() {
+    local path profs c
     while read -r path profs; do
         has_word "$profs" laravel || continue
         if [ "$path" = . ]; then c="$TARGET/composer.json"; else c="$TARGET/$path/composer.json"; fi
@@ -409,30 +477,38 @@ valid_path() {
 
 valid_app() {
     # valid_app <path> <profile>...
+    local path p
+    [ $# -ge 2 ] || return 1
     path=$1
     shift
     valid_path "$path" || return 1
-    [ $# -gt 0 ] || return 1
     for p in "$@"; do has_word "$KNOWN_PROFILES" "$p" || return 1; done
     return 0
 }
 
 add_app() {
-    # add_app "<path> <profile>...": validates, normalises, appends to the apps list.
+    # add_app "<path> <profile>...": validates, normalises, deduplicates profiles, appends to the apps list.
+    local line path profs= p
     line=$(squeeze "$1")
     set -- $line
     valid_app "$@" || return 1
     path=$(norm_path "$1")
     shift
-    printf '%s %s\n' "$path" "$*" >> "$WORK/apps"
+    for p in "$@"; do
+        has_word "$profs" "$p" || profs="$profs${profs:+ }$p"
+    done
+    printf '%s %s\n' "$path" "$profs" >> "$WORK/apps"
 }
 
 load_answers_file() {
+    local line key val
     apps_seen=0
-    : > "$WORK/apps.answers"
     while IFS= read -r line || [ -n "$line" ]; do
         line=$(trim "$line")
         case $line in '' | '#'*) continue ;; esac
+        case ${line%%[[:space:]]*} in
+            version | installed | commit | file | seed | block | generated | deleted | incoming | dir) continue ;;
+        esac
         case $line in answer[[:space:]]*) line=$(trim "${line#answer}") ;; esac
         case $line in *=*) ;; *) continue ;; esac
         key=$(trim "${line%%=*}")
@@ -446,7 +522,6 @@ load_answers_file() {
             agents) A_AGENTS=$val ;;
             gherkin) A_GHERKIN=$val ;;
             host) A_HOST=$val ;;
-            version | installed | commit | file | seed | block | generated | deleted | incoming | dir) ;;
             *) die "answers file: unknown key '$key'" ;;
         esac
     done < "$ANSWERS_FILE"
@@ -535,16 +610,13 @@ ask_yes_no() {
 menu_rows() {
     # menu_rows <marked keys | -> <key> <label> <hint> [...]: one numbered line per choice. Unless
     # the first argument is -, each line carries a box, ticked for the marked keys.
-    marks=$1
+    local marks=$1 w=0 n=0 a fmt i=0 box
     shift
-    w=0
-    n=0
     for a in "$@"; do
         n=$((n + 1))
         if [ $((n % 3)) = 2 ] && [ ${#a} -gt "$w" ]; then w=${#a}; fi
     done
     fmt="    %s%2d%s  %s%-${w}s  %s%s%s\n"
-    i=0
     while [ $# -ge 3 ]; do
         i=$((i + 1))
         box=
@@ -604,8 +676,7 @@ pick() {
 choose() {
     # choose <one|some|any> <default keys> <key> <label> <hint> [...]: a numbered menu; prints the
     # chosen keys, separated by spaces. Enter takes the default. Fails when the input ends.
-    mode=$1
-    def=$2
+    local mode=$1 def=$2 dn ask picked
     shift 2
     if [ "$mode" = one ]; then menu_rows - "$@"; else menu_rows "$def" "$@"; fi
     dn=$(numbers_of "$def" "$@")
@@ -628,6 +699,7 @@ choose() {
 }
 
 ask_apps() {
+    local p path profs
     : > "$WORK/apps"
     set --
     for p in $KNOWN_PROFILES; do set -- "$@" "$p" "$(profile_name "$p")" "$p"; done
@@ -843,59 +915,112 @@ lock_entry() {
 
 extract_block() {
     awk -v b="$BEGIN_MARK" -v e="$END_MARK" '
-        !done && $0 == b { inb = 1; found = 1; next }
-        inb && $0 == e { inb = 0; done = 1; next }
+        { s = $0; sub(/\r$/, "", s) }
+        !done && s == b { inb = 1; found = 1; next }
+        inb && s == e { inb = 0; done = 1; next }
         inb { print }
         END { if (!done) exit 1 }' "$1"
 }
 
 replace_block() {
     awk -v b="$BEGIN_MARK" -v e="$END_MARK" -v nb="$2" '
-        !done && $0 == b { print; while ((getline l < nb) > 0) print l; close(nb); skip = 1; next }
-        skip && $0 == e { skip = 0; done = 1; print; next }
+        { s = $0; sub(/\r$/, "", s) }
+        !done && s == b { print; while ((getline l < nb) > 0) print l; close(nb); skip = 1; next }
+        skip && s == e { skip = 0; done = 1; print; next }
         !skip { print }' "$1"
 }
 
 append_block() {
-    cat "$1"
-    [ -z "$(tail -c 1 "$1")" ] || printf '\n'
-    printf '\n%s\n' "$BEGIN_MARK"
+    if [ -s "$1" ]; then
+        cat "$1"
+        [ -z "$(tail -c 1 "$1")" ] || printf '\n'
+        printf '\n'
+    fi
+    printf '%s\n' "$BEGIN_MARK"
     cat "$2"
     printf '%s\n' "$END_MARK"
 }
 
 strip_block() {
     awk -v b="$BEGIN_MARK" -v e="$END_MARK" '
-        { line[++n] = $0 }
+        { line[++n] = $0; sline[n] = $0; sub(/\r$/, "", sline[n]) }
         END {
             s = 0; t = 0
-            for (i = 1; i <= n; i++) if (line[i] == b) { s = i; break }
-            for (j = s; s && j <= n; j++) if (line[j] == e) { t = j; break }
-            if (s && t && s > 1 && line[s - 1] == "" && (t == n || line[t + 1] == "")) s--
+            for (i = 1; i <= n; i++) if (sline[i] == b) { s = i; break }
+            for (j = s; s && j <= n; j++) if (sline[j] == e) { t = j; break }
+            if (s && t && s > 1 && sline[s - 1] == "" && (t == n || sline[t + 1] == "")) s--
             for (i = 1; i <= n; i++) if (!(s && t && i >= s && i <= t)) print line[i]
         }' "$1"
 }
 
 write_incoming() {
     # write_incoming <source> <path>: the kit's complete version beside the project's file.
-    put "$1" "$TARGET/$2$INCOMING"
-    record "incoming $(hash_file "$1") $2$INCOMING"
-    note kept "$2"
+    local src=$1 p=$2
+    put "$src" "$TARGET/$p$INCOMING"
+    record "incoming $(hash_file "$src") $p$INCOMING"
+    note kept "$p"
 }
 
 # ---------------------------------------------------------------------------------------------
 # The policy, per file
 
+sync_agents_file() {
+    # Reconcile .ai/agents with A_AGENTS after --reconfigure or --answers on update.sh.
+    local dest="$TARGET/.ai/agents" src="$WORK/render/.ai/agents" new
+    if [ -L "$dest" ] || { [ -e "$dest" ] && [ ! -f "$dest" ]; }; then
+        write_incoming "$src" .ai/agents
+        return 0
+    fi
+    if [ -f "$dest" ]; then
+        awk -v known=" $KNOWN_AGENTS " -v want=" $A_AGENTS " '
+            {
+                s = $0
+                sub(/\r$/, "", s)
+                t = s
+                sub(/^#[ \t]*/, "", t)
+                gsub(/^[ \t]+|[ \t]+$/, "", t)
+                if (t ~ /^[a-z]+$/ && index(known, " " t " ") > 0) {
+                    seen[t] = 1
+                    if (index(want, " " t " ") > 0) print t
+                    else print "# " t
+                    next
+                }
+                print
+            }
+            END {
+                n = split(want, arr, " ")
+                for (i = 1; i <= n; i++) {
+                    a = arr[i]
+                    if (a != "" && !(a in seen)) print a
+                }
+            }' "$dest" > "$WORK/agents.updated"
+        if cmp -s "$WORK/agents.updated" "$dest"; then
+            record "seed $(hash_file "$dest") .ai/agents"
+            note unchanged .ai/agents
+            return 0
+        fi
+    else
+        cp "$src" "$WORK/agents.updated"
+    fi
+    new=$(hash_file "$WORK/agents.updated")
+    put "$WORK/agents.updated" "$dest"
+    record "seed $new .ai/agents"
+    note updated .ai/agents
+}
+
 apply_file() {
     # apply_file <path> <file|seed>
-    p=$1
-    kind=$2
+    local p=$1 kind=$2 src dest new okind osha cur
     src=$(source_of "$p")
     dest="$TARGET/$p"
     new=$(hash_file "$src")
     set -- $(lock_entry "$p")
     okind=${1-}
     osha=${2-}
+    if [ "$p" = .ai/agents ] && [ "${AGENTS_CHANGED:-0}" = 1 ]; then
+        sync_agents_file
+        return 0
+    fi
     if [ "$okind" = deleted ]; then record "deleted - $p"; note skipped "$p"; return 0; fi
     if [ ! -e "$dest" ] && [ ! -L "$dest" ]; then
         if [ -n "$okind" ]; then record "deleted - $p"; note skipped "$p"; return 0; fi
@@ -929,7 +1054,7 @@ apply_file() {
 
 apply_block() {
     # apply_block <path>: only the text between the markers is the kit's.
-    p=$1
+    local p=$1 src dest nb okind obsha ofsha cf cb
     src=$(source_of "$p")
     dest="$TARGET/$p"
     extract_block "$src" > "$WORK/block.new" || die "the kit's $p has no specforge block"
@@ -995,6 +1120,7 @@ apply_block() {
 
 apply_dropped() {
     # Files the kit installed that are no longer selected: taken back while unmodified.
+    local sha p dest
     awk '$1 == "file" || $1 == "seed" { print $2, $NF }' "$WORK/lock.old" > "$WORK/dropped"
     while read -r sha p; do
         grep -qxF "$p" "$WORK/target.paths" && continue
@@ -1010,6 +1136,7 @@ apply_dropped() {
 
 carry_over() {
     # Directories the installer created, and incoming files not yet reconciled.
+    local kind sha p
     while read -r kind sha p; do
         case $kind in
             dir) [ -d "$TARGET/$p" ] && record "dir - $p" ;;
@@ -1105,6 +1232,7 @@ summarize() {
 }
 
 handover() {
+    local n=1
     [ "$DRY_RUN" = 1 ] && return 0
     say ''
     if [ -n "$A_AGENTS" ]; then
@@ -1114,7 +1242,6 @@ handover() {
     fi
     say ''
     say 'Next:'
-    n=1
     if [ "$CMD" = install ]; then
         if [ "$A_STATE" = new ]; then
             say "  $n. Open the project in your agent and say: Run the bootstrap prompt."

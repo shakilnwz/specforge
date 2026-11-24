@@ -2,6 +2,10 @@
 paths:
   - '**/*.jsx'
   - '**/*.tsx'
+  - 'apps/*/src/features/**/*.ts'
+  - 'apps/*/src/shared/**/*.ts'
+  - 'src/features/**/*.ts'
+  - 'src/shared/**/*.ts'
 ---
 
 # React
@@ -25,5 +29,5 @@ core section it realises.
   `http(s):` before it reaches `href` or `src`.
 
 ## Tooling
-`lint` runs ESLint then Prettier; `tsc --noEmit` type-checks. Run when asked. If a change does not
+`lint` runs ESLint then Prettier; `tsc --noEmit` type-checks before handing off. If a change does not
 show in the browser, the dev server or a build may be needed — ask, do not guess.
