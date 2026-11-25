@@ -213,7 +213,7 @@ code host) and records the answers in `.ai/specforge.lock`. Bootstrap or adopt s
 | Profiles, per path | Any combination of Laravel · .NET · Next.js · React · Vue — e.g. Laravel with Vue or React in `resources/js`, or a Laravel API beside a Next.js app. Next.js brings React with it | `docs/conventions/stack-<name>.md` and `.ai/rules/<name>.md` for each profile in use | Profiles and rule files no path uses; then `sync-rules` | ADR-0001, `AGENTS.md` → **Stacks**, one row per path |
 | Next.js mode | Full-stack · frontend over another app's API | Both live in `stack-nextjs.md` | — | ADR-0001 |
 | Modularity | Not modular · Level 1 code · Level 2 data · Level 3 service | Everything; the modularity audit runs from G1 | Nothing. Not modular: the owner waives G1.2 and G3.6, citing ADR-0002 | ADR-0002 |
-| Acceptance scenarios | In `spec.md` · a Gherkin runner (Behat, Reqnroll, playwright-bdd) | Runner: `docs/templates/feature.feature`, and `features/` as specs are written | No runner: `docs/templates/feature.feature` | ADR-0001 |
+| Acceptance scenarios | In `spec.md` · a Gherkin runner (Behat, Reqnroll, playwright-bdd) | Runner: `.ai/templates/feature.feature`, and `features/` as specs are written | No runner: `.ai/templates/feature.feature` | ADR-0001 |
 | Laravel Boost | Yes · no (Laravel apps only) | Yes: `php artisan boost:install` after installing the rules; the installer reminds you when it finds Boost | — | ADR-0001 |
 | Code host | GitHub · other | GitHub: `.github/PULL_REQUEST_TEMPLATE/` | Other: those templates, their checklists ported to the host's | — |
 | Database, cache, queue, hosting | Per app | No file changes; each profile covers its data-access options | — | ADR-0001 |
@@ -251,7 +251,7 @@ admin beside a Next.js shop in one repository, each get exactly their own profil
 | **Spec rules** — what is built, and how it is proved | [`specs.md`](template/docs/conventions/specs.md); the `spec`, `design`, `tasks` and `feature` templates | The owner and agents before any behaviour change |
 | **Code rules** — how code is shaped and written | [`architecture`](template/docs/conventions/architecture.md), [`coding`](template/docs/conventions/coding.md), [`frontend`](template/docs/conventions/frontend.md), [`security`](template/docs/conventions/security.md), [`testing`](template/docs/conventions/testing.md), the `stack-*` profiles, routed to by `.ai/rules/` | Agents before any edit; reviewers on every PR |
 | **Audit rules** — how code is examined | [`auditing.md`](template/docs/conventions/auditing.md) — protocol, ownership, severity, evidence, verification — and [`.ai/prompts/audits/`](template/.ai/prompts/audits/) | Whoever runs an audit, person or agent |
-| **Document rules** — where findings and decisions go | [`documentation.md`](template/docs/conventions/documentation.md), [`docs/templates/`](template/docs/templates/) | Everyone writing a document |
+| **Document rules** — where findings and decisions go | [`documentation.md`](template/docs/conventions/documentation.md), [`.ai/templates/`](template/.ai/templates/) | Everyone writing a document |
 
 When sources disagree, `AGENTS.md` ranks them, highest first:
 1. the user's instruction;
@@ -349,13 +349,13 @@ template/                         The ruleset — installed into a project
       bootstrap.md                Phase 0 for a project with no code yet
       adopt.md                    Adoption of a project that already has code
       audits/                     One runnable prompt per audit type (18)
+    templates/                    One template per document type (13)
   docs/
     conventions/                  Normative rules
       architecture coding frontend security testing                — how code is written, any stack
       specs                                                        — how behaviour is specified
       stack-laravel stack-dotnet stack-nextjs stack-react stack-vue — how each stack realises the core
       documentation auditing lifecycle                             — how the project is run
-    templates/                    One template per document type (13)
     audit/readiness.md            Living tracker of every gate criterion, starting at 0 of 40
   .github/PULL_REQUEST_TEMPLATE/  default, feature, bugfix, hotfix
 ```

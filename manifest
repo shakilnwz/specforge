@@ -34,6 +34,6 @@ profile=react    .ai/rules/react.md
 profile=vue      docs/conventions/stack-vue.md
 profile=vue      .ai/rules/vue.md
 
-gherkin=yes      docs/templates/feature.feature
+gherkin=yes      .ai/templates/feature.feature
 
 host=github      .github/PULL_REQUEST_TEMPLATE/

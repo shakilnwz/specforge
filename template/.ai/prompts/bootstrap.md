@@ -20,8 +20,8 @@ give; a placeholder left open is better than a fabricated fact.
 ## Before you start
 
 1. Confirm the rules are present: `AGENTS.md`, `CLAUDE.md`, `.ai/rules/`, `.ai/prompts/`,
-   `.ai/agents`, `.ai/bin/`, `docs/conventions/` (core conventions and `stack-*.md` profiles),
-   `docs/templates/`, `docs/audit/readiness.md`.
+   `.ai/templates/`, `.ai/agents`, `.ai/bin/`, `docs/conventions/` (core conventions and
+   `stack-*.md` profiles), `docs/audit/readiness.md`.
 2. Check remaining placeholders by inspecting `AGENTS.md`, `CLAUDE.md`, `docs/audit/readiness.md`,
    and `.github/` for `<!-- bootstrap:` (or run `.ai/bin/check` once past Phase 0).
 3. Read `lifecycle.md` → G0, [`documentation.md`](../../docs/conventions/documentation.md) and
@@ -60,13 +60,13 @@ Ask in one round, grouped, with a recommended default for each where one exists:
 ## Steps
 
 1. Write **ADR-0001** (stack per app) and **ADR-0002** (shape, surfaces, modules and modularity
-   level) from [`adr.md`](../../docs/templates/adr.md), status Proposed, with the alternatives the
+   level) from [`adr.md`](../templates/adr.md), status Proposed, with the alternatives the
    owner weighed.
 2. Write the context page `docs/architecture/context.md` from
-   [`architecture.md`](../../docs/templates/architecture.md): the people (the actors specs will
+   [`architecture.md`](../templates/architecture.md): the people (the actors specs will
    name), every external system in one diagram, and the **capabilities in scope** — one line each,
    numbered in the order they will be specified, each to become `docs/specs/NNNN-<capability>/`.
-3. Seed `docs/reference/glossary.md` from [`reference.md`](../../docs/templates/reference.md): one
+3. Seed `docs/reference/glossary.md` from [`reference.md`](../templates/reference.md): one
    row per concept — the term, its one-line meaning, and the names it must not be called.
 4. Fill `AGENTS.md`: the **Stacks** table — one row per path with its own profiles, a frontend
    inside a server app on a row of its own, since the most specific path wins; **Architecture
